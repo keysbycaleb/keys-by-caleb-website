@@ -1,134 +1,109 @@
-// netlify/functions/submission-created.js (FINAL VERSION with Google Sheets Logic)
+// netlify/functions/submission-created.js (V2.15 - Fix Form Name & Checkbox Logic)
 
-// Import the Google APIs client library
 const { google } = require('googleapis');
 
-// --- Configuration - Read from Netlify Environment Variables ---
+// --- Configuration ---
 const GOOGLE_SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
-// Handle escaped newlines in the private key environment variable
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-const GOOGLE_SHEET_NAME = process.env.GOOGLE_SHEET_NAME || 'Sheet1'; // Default to 'Sheet1' if not set
+const GOOGLE_SHEET_NAME = process.env.GOOGLE_SHEET_NAME || 'Sheet1';
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 // --- End Configuration ---
 
-// Define the order of columns in your Google Sheet (MUST MATCH YOUR SHEET EXACTLY)
-// Use the version you confirmed was correct for your Sheet
+// Define the order of columns in your Google Sheet
 const SHEET_COLUMN_ORDER = [
     'Timestamp', 'Form Name', 'Name', 'Email', 'Phone', 'Event Date', 'Event Time',
     'Estimated Duration', 'Event Type', 'Venue Name', 'Venue Address',
     'Piano Availability', 'Referral', 'Message', 'Agreed Scope Term', 'Agreed Payment Term'
 ];
+const LAST_COLUMN_LETTER = 'P'; // Adjust if needed
 
-// Main function handler triggered by Netlify 'submission-created' event
+// Main function handler
 exports.handler = async (event, context) => {
-    console.log('Submission-created function triggered.');
+    console.log('V2.15: Submission-created function triggered.');
 
-    // Basic check for required environment variables
-    if (!GOOGLE_SHEET_ID || !GOOGLE_CLIENT_EMAIL || !GOOGLE_PRIVATE_KEY) {
-        const errorMsg = 'FATAL ERROR: Missing required Google credentials environment variables.';
-        console.error(errorMsg);
-        // Return 200 to Netlify so it doesn't retry, but log the critical failure
-        return { statusCode: 200, body: `Internal configuration error.` };
+    if (!GOOGLE_SHEET_ID || !GOOGLE_CLIENT_EMAIL || !GOOGLE_PRIVATE_KEY) { /* ... credentials check ... */
+        const errorMsg = 'FATAL ERROR: Missing required Google credentials environment variables.'; console.error(errorMsg); return { statusCode: 200, body: `Internal configuration error.` };
     }
+
+    let payload = {}; // To store the entire parsed payload
+    let payloadData = {}; // To store the form field data
 
     try {
-        // 1. Parse the submission data from the event body
-        // The actual submission data is nested under 'payload' for submission-created events
-        let payloadData = {};
+        // 1. Parse Data & Extract Form Name Correctly
         if (event.body) {
-            try {
-                payloadData = JSON.parse(event.body)?.payload?.data || {};
-                 console.log('Parsed Payload Data:', payloadData);
-            } catch (parseError) {
-                console.error("Error parsing event body JSON:", parseError);
-                // Attempt fallback parsing if not JSON (though submission-created usually is)
-                const submissionData = new URLSearchParams(event.body);
-                payloadData = Object.fromEntries(submissionData.entries());
-                console.log('Fallback Parsed Data (URLSearchParams):', payloadData);
-                if (!payloadData['form-name']) { // If still can't get form name, fail gracefully
-                     throw new Error("Could not parse form data from event body.");
-                }
-            }
-        } else {
-             throw new Error("Event body is missing.");
-        }
+             try {
+                 payload = JSON.parse(event.body)?.payload || {}; // Get the whole payload
+                 payloadData = payload.data || {}; // Extract form fields
+             } catch (e) {
+                console.error("Error parsing JSON body, attempting URLSearchParams fallback:", e);
+                payloadData = Object.fromEntries(new URLSearchParams(event.body).entries());
+                // Try to get form name from hidden input if JSON parse failed
+                payload.form_name = payloadData['form-name'];
+             }
+        } else { throw new Error("Event body is missing."); }
 
-        // Get form name
-        const formName = payloadData['form-name'] || 'Unknown Form';
+        // *** FIXED: Get form name from payload.form_name ***
+        const formName = payload.form_name || payloadData['form-name'] || 'Unknown Form';
         console.log(`Processing submission for form: ${formName}`);
+        console.log('Parsed Payload Data (payload.data):', payloadData);
 
-        // 2. Prepare data row for Google Sheets
+        // *** Log checkbox values as received ***
+        console.log("Raw Checkbox Values Received:", {
+            agree_scope: payloadData['agree_scope'],
+            agree_payment: payloadData['agree_payment'],
+            agree_hourly_deposit: payloadData['agree_hourly_deposit'],
+            agree_hourly_balance: payloadData['agree_hourly_balance']
+        });
+
+        // 2. Prepare Row
         const timestamp = new Date().toISOString();
         const dataRow = SHEET_COLUMN_ORDER.map(header => {
-            // Map known header names to potential form field names
-            // Handles case variations and minor differences automatically if possible
             const key = header.toLowerCase().replace(/ /g, '_');
             const alternativeKey = header; // Try exact match too
+            let value = ''; // Default to empty string
 
             switch (header) {
-                case 'Timestamp': return timestamp;
-                case 'Form Name': return formName;
-                // Handle fields that might have different names across forms
-                case 'Event Type': return payloadData['event_type'] || payloadData['event_type_hourly'] || '';
-                case 'Message': return payloadData['message'] || payloadData['message_hourly'] || '';
-                case 'Estimated Duration': return payloadData['estimated_duration'] || ''; // Only on hourly
-                case 'Agreed Scope Term': return payloadData['agree_scope'] || payloadData['agree_hourly_deposit'] || '';
-                case 'Agreed Payment Term': return payloadData['agree_payment'] || payloadData['agree_hourly_balance'] || '';
-                // Default lookup
-                default: return payloadData[key] || payloadData[alternativeKey] || '';
+                case 'Timestamp': value = timestamp; break;
+                case 'Form Name': value = formName; break;
+                case 'Event Type': value = payloadData['event_type'] || payloadData['event_type_hourly'] || ''; break;
+                case 'Message': value = payloadData['message'] || payloadData['message_hourly'] || ''; break;
+                case 'Estimated Duration': value = payloadData['estimated_duration'] || ''; break;
+                // *** FIXED: Checkbox Logic - Check for "on" or boolean true ***
+                case 'Agreed Scope Term':
+                    const scopeVal = payloadData['agree_scope'] || payloadData['agree_hourly_deposit'];
+                    value = (scopeVal && String(scopeVal).toLowerCase() === 'on') || scopeVal === true ? 'TRUE' : '';
+                    break;
+                case 'Agreed Payment Term':
+                    const paymentVal = payloadData['agree_payment'] || payloadData['agree_hourly_balance'];
+                    value = (paymentVal && String(paymentVal).toLowerCase() === 'on') || paymentVal === true ? 'TRUE' : '';
+                    break;
+                // Default lookup using derived key or original header
+                default: value = payloadData[key] || payloadData[alternativeKey] || ''; break;
             }
+            // Ensure value is a string for Sheets API
+            return String(value);
         });
-
         console.log('Formatted Data Row:', dataRow);
 
-        // 3. Authenticate with Google
-        const auth = new google.auth.JWT(
-            GOOGLE_CLIENT_EMAIL,
-            null,
-            GOOGLE_PRIVATE_KEY,
-            SCOPES
-        );
+        // 3. Authenticate
+        console.log("Attempting Google JWT authentication...");
+        const auth = new google.auth.JWT( GOOGLE_CLIENT_EMAIL, null, GOOGLE_PRIVATE_KEY, SCOPES );
+        console.log("Google JWT Auth object created.");
 
-        // 4. Get Google Sheets API client
+        // 4. Get Sheets API client
         const sheets = google.sheets({ version: 'v4', auth });
+        console.log("Google Sheets API client created.");
 
-        // 5. Append data to the sheet
-        const range = `${GOOGLE_SHEET_NAME}!A1`; // Append after the last row
-        const resource = {
-            values: [dataRow], // Data needs to be an array of arrays
-        };
+        // 5. Append data
+        const range = `${GOOGLE_SHEET_NAME}!A:${LAST_COLUMN_LETTER}`; // Use sheet name and column range
+        const resource = { values: [dataRow] };
+        console.log(`Attempting Google Sheets API call: sheets.spreadsheets.values.append to ${GOOGLE_SHEET_ID} range ${range}`);
+        const response = await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: range, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', resource: resource });
+        console.log('Google Sheets API call FINISHED.'); console.log('Google Sheets API response Status:', response.status); console.log('Cells updated:', response.data?.updates?.updatedRange);
 
-        console.log(`Attempting to append to Sheet ID: ${GOOGLE_SHEET_ID}, Range: ${range}`);
+        // 6. Return success
+        return { statusCode: 200, body: JSON.stringify({ message: 'Submission processed successfully and sent to Google Sheet.' }) };
 
-        const response = await sheets.spreadsheets.values.append({
-            spreadsheetId: GOOGLE_SHEET_ID,
-            range: range,
-            valueInputOption: 'USER_ENTERED', // Interpret values like user typing
-            insertDataOption: 'INSERT_ROWS', // Add new row(s)
-            resource: resource,
-        });
-
-        console.log('Google Sheets API response:', response.status, response.statusText);
-        console.log('Cells updated:', response.data?.updates?.updatedRange);
-
-        // 6. Return success response to Netlify
-        return {
-            statusCode: 200, // IMPORTANT: Return 200 even on success for background funcs
-            body: JSON.stringify({ message: 'Submission processed and sent to Google Sheet.' }),
-        };
-
-    } catch (error) {
-        console.error('Error processing submission:', error);
-         // Log specific Google API errors if available
-         if (error.response?.data?.error) {
-            console.error('Google API Error Details:', error.response.data.error);
-        }
-        // Still return 200 to Netlify for background functions to prevent retries,
-        // but log the error thoroughly. You could use external logging too.
-        return {
-            statusCode: 200, // Return 200 even on internal error for background funcs
-            body: `Internal error processing submission. Check function logs. Error: ${error.message}`,
-        };
-    }
+    } catch (error) { /* ... Enhanced error logging ... */ console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'); console.error('!!! ERROR Processing Submission:', error.message); console.error('!!! Full Error Object:', error); if (error.response?.data?.error) { console.error('!!! Google API Error Details:', error.response.data.error); } if (error.stack) { console.error('!!! Stack Trace:', error.stack); } console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'); return { statusCode: 200, body: `Internal error processing submission. Check function logs. Error: ${error.message}` }; }
 };
