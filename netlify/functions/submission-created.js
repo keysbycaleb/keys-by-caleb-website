@@ -16,7 +16,8 @@ const SHEET_COLUMN_ORDER = [
     'Estimated Duration', 'Event Type', 'Venue Name', 'Venue Address',
     'Piano Availability', 'Referral', 'Message', 'Agreed Scope Term', 'Agreed Payment Term'
 ];
-const LAST_COLUMN_LETTER = 'P'; // Adjust if needed
+// *** Use HARDCODED range for testing - Adjust P if needed! ***
+const range = 'Sheet1!A:P'; // Directly specify sheet name and column range
 
 // Main function handler
 exports.handler = async (event, context) => {
