@@ -94,7 +94,7 @@ exports.handler = async (event, context) => {
         const sheets = google.sheets({ version: 'v4', auth });
 
         // 5. Append data to the sheet
-        const range = `${GOOGLE_SHEET_NAME}!A1`; // Append after the last row
+        const range = GOOGLE_SHEET_NAME; // Correct version
         const resource = {
             values: [dataRow], // Data needs to be an array of arrays
         };
