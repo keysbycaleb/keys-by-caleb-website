@@ -1,0 +1,11 @@
+# netlify.toml
+
+[build]
+  # Explicitly set the publish directory to the current directory
+  publish = "."
+  # Tells Netlify where your serverless functions live
+  functions = "netlify/functions"
+
+# Specify Node.js version for functions (Using version 18 LTS is recommended)
+[build.environment]
+  NODE_VERSION = "18"

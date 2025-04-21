@@ -1,0 +1,12 @@
+# Ignore Node.js dependency modules
+node_modules/
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Netlify local state/config (optional but recommended)
+.netlify/
+
+node_modules/
+.DS_Store
+.netlify/
