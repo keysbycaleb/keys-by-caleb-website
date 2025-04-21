@@ -1,4 +1,4 @@
-// netlify/functions/submission-created.js (V2.16 - Simplified Checkbox Logic)
+// netlify/functions/submission-created.js (V2.17 Corrected - Removed duplicate/bad range definition)
 
 const { google } = require('googleapis');
 
@@ -16,12 +16,14 @@ const SHEET_COLUMN_ORDER = [
     'Estimated Duration', 'Event Type', 'Venue Name', 'Venue Address',
     'Piano Availability', 'Referral', 'Message', 'Agreed Scope Term', 'Agreed Payment Term'
 ];
-// *** Use HARDCODED range for testing - Adjust P if needed! ***
-const range = 'Sheet1!A:P'; // Directly specify sheet name and column range
+const LAST_COLUMN_LETTER = 'P'; // Keep this updated if columns change
+
+// *** CORRECT Hardcoded range definition - Adjust P if needed! ***
+const range = `Sheet1!A:${LAST_COLUMN_LETTER}`; // Use sheet name and cover all columns
 
 // Main function handler
 exports.handler = async (event, context) => {
-    console.log('V2.16: Submission-created function triggered.');
+    console.log('V2.17 Corrected: Submission-created function triggered.'); // Updated log version
 
     if (!GOOGLE_SHEET_ID || !GOOGLE_CLIENT_EMAIL || !GOOGLE_PRIVATE_KEY) { /* ... credentials check ... */
         const errorMsg = 'FATAL ERROR: Missing required Google credentials environment variables.'; console.error(errorMsg); return { statusCode: 200, body: `Internal configuration error.` };
@@ -47,36 +49,25 @@ exports.handler = async (event, context) => {
         const formName = payload.form_name || payloadData['form-name'] || 'Unknown Form';
         console.log(`Processing submission for form: ${formName}`);
         console.log('Parsed Payload Data (payload.data):', payloadData);
-        // Log checkbox values as received
-        console.log("Raw Checkbox Values Received:", {
-            agree_scope: payloadData['agree_scope'], agree_payment: payloadData['agree_payment'], agree_hourly_deposit: payloadData['agree_hourly_deposit'], agree_hourly_balance: payloadData['agree_hourly_balance']
-        });
+        console.log("Raw Checkbox Values Received:", { agree_scope: payloadData['agree_scope'], agree_payment: payloadData['agree_payment'], agree_hourly_deposit: payloadData['agree_hourly_deposit'], agree_hourly_balance: payloadData['agree_hourly_balance'] });
 
         // 2. Prepare Row
         const timestamp = new Date().toISOString();
         const dataRow = SHEET_COLUMN_ORDER.map(header => {
             const key = header.toLowerCase().replace(/ /g, '_');
             const alternativeKey = header;
-            let value = ''; // Default to empty string
-
+            let value = '';
             switch (header) {
                 case 'Timestamp': value = timestamp; break;
                 case 'Form Name': value = formName; break;
                 case 'Event Type': value = payloadData['event_type'] || payloadData['event_type_hourly'] || ''; break;
                 case 'Message': value = payloadData['message'] || payloadData['message_hourly'] || ''; break;
                 case 'Estimated Duration': value = payloadData['estimated_duration'] || ''; break;
-                // *** SIMPLIFIED Checkbox Logic ***
-                case 'Agreed Scope Term':
-                    value = (payloadData['agree_scope'] || payloadData['agree_hourly_deposit']) ? 'TRUE' : '';
-                    break;
-                case 'Agreed Payment Term':
-                    value = (payloadData['agree_payment'] || payloadData['agree_hourly_balance']) ? 'TRUE' : '';
-                    break;
-                // Default lookup
+                case 'Agreed Scope Term': value = (payloadData['agree_scope'] || payloadData['agree_hourly_deposit']) ? 'TRUE' : ''; break;
+                case 'Agreed Payment Term': value = (payloadData['agree_payment'] || payloadData['agree_hourly_balance']) ? 'TRUE' : ''; break;
                 default: value = payloadData[key] || payloadData[alternativeKey] || ''; break;
             }
-            // Ensure value is a string for Sheets API
-            return String(value);
+            return String(value); // Ensure string conversion
         });
         console.log('Formatted Data Row:', dataRow);
 
@@ -90,10 +81,17 @@ exports.handler = async (event, context) => {
         console.log("Google Sheets API client created.");
 
         // 5. Append data
-        const range = `<span class="math-inline">\{GOOGLE\_SHEET\_NAME\}\!A\:</span>{LAST_COLUMN_LETTER}`; // Use sheet name and column range
+        // *** FAULTY/DUPLICATE RANGE DEFINITION REMOVED FROM HERE ***
         const resource = { values: [dataRow] };
+        // Use the 'range' variable defined correctly near the top
         console.log(`Attempting Google Sheets API call: sheets.spreadsheets.values.append to ${GOOGLE_SHEET_ID} range ${range}`);
-        const response = await sheets.spreadsheets.values.append({ spreadsheetId: GOOGLE_SHEET_ID, range: range, valueInputOption: 'USER_ENTERED', insertDataOption: 'INSERT_ROWS', resource: resource });
+        const response = await sheets.spreadsheets.values.append({
+            spreadsheetId: GOOGLE_SHEET_ID,
+            range: range, // This now uses the correct 'Sheet1!A:P' value
+            valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS',
+            resource: resource,
+        });
         console.log('Google Sheets API call FINISHED.'); console.log('Google Sheets API response Status:', response.status); console.log('Cells updated:', response.data?.updates?.updatedRange);
 
         // 6. Return success
