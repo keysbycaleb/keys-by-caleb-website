@@ -1,7 +1,8 @@
 /**
- * JavaScript for Keys by Caleb - Multi-Step Booking Pages (V2.13 - Corrected Validation Trigger & Submit Timing)
+ * JavaScript for Keys by Caleb - Multi-Step Booking Pages (V2.14 - Added Places Autocomplete)
  *
  * Handles:
+ * - Google Places Autocomplete for venue address input.
  * - Dynamic detection of 5 or 6 steps.
  * - Multi-step form navigation.
  * - Input validation per step (Errors show on Next/Submit).
@@ -11,8 +12,45 @@
  * - Step transitions, summary updates, messages, scroll-to-top, etc.
  */
 
+// --- Google Places Autocomplete Initialization ---
+function initMapAutocomplete() {
+    console.log("Attempting to initialize Google Places Autocomplete...");
+    const addressInput = document.getElementById('venue_address');
+
+    if (addressInput) {
+        console.log("Venue address input found, attaching Autocomplete.");
+        const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+            // Bias results towards North America / US
+             componentRestrictions: { country: "us" },
+             // Request specific data fields
+            fields: ["address_components", "geometry", "icon", "name", "formatted_address"],
+            // Types can be 'geocode', 'address', 'establishment', '(regions)', '(cities)'
+            types: ["geocode"], // 'geocode' is general, 'address' for specific street addresses
+        });
+
+        // Optional: Add listener for when a place is selected
+        autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            console.log("Place selected:", place);
+            // You could potentially do more here, like filling other fields
+            // or validating the address type if needed.
+             // Ensure the input value reflects the selection correctly
+             if (place && place.formatted_address) {
+                addressInput.value = place.formatted_address;
+                // Trigger validation clearance if needed after selection
+                clearFieldError(addressInput);
+             }
+        });
+        console.log("Autocomplete attached to #venue_address.");
+    } else {
+        console.warn("#venue_address input not found on this page for Autocomplete.");
+    }
+}
+// --- End Google Places Autocomplete ---
+
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb - Booking Page JS Initialized (V2.13 - Corrected Validation Trigger & Submit Timing)");
+    console.log("Keys by Caleb - Booking Page JS Initialized (V2.14 - Added Places Autocomplete)");
 
     gsap.registerPlugin(ScrollToPlugin);
 
@@ -247,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeBookingForm();
 
     // --- Expose initMapAutocomplete globally ---
+    // Make sure the function is defined *before* this line
     window.initMapAutocomplete = initMapAutocomplete;
 
 }); // End DOMContentLoaded
