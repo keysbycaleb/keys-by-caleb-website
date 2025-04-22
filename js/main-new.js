@@ -1,13 +1,13 @@
 /**
- * Main JavaScript for Keys by Caleb Website (V44 - Consistent Scroll Handling)
+ * Main JavaScript for Keys by Caleb Website (V45 - Reduced Trackpad Scroll Delay)
  * Handles scroll-to-top, active nav highlighting, GSAP smooth scroll (links),
  * contact form (default HTML handling), tsParticles hero animation (Float Effect), footer copyright year.
  * Implements JS-driven section scrolling for Wheel/Trackpad and Keyboard on desktop.
- * **Restored internal link click handler to use animateScroll wrapper for consistency.**
+ * **Reduced wheelScrollEndDelay for faster trackpad response.**
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb NEW JS Initialized (V44 - Consistent Scroll Handling).");
+    console.log("Keys by Caleb NEW JS Initialized (V45 - Reduced Trackpad Scroll Delay).");
 
     // --- GSAP Plugin Registration ---
     if (typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined') {
@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let accumulatedDeltaY = 0;
 
     // --- Configuration ---
-    const wheelScrollEndDelay = 40;
+    // *** REDUCED DELAY HERE ***
+    const wheelScrollEndDelay = 50; // Reduced from 200 for quicker response
     const sectionScrollDuration = 0.7;
     const sectionScrollEase = 'power2.inOut';
     const linkScrollDuration = 1.0; // Duration for link clicks
@@ -78,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             onComplete: () => {
                 console.log("%cAnimateScroll COMPLETE.", 'color: green; font-weight: bold;');
                 isAnimating = false;
-                if (isDesktopJsScrollActive()) { console.log("AnimateScroll: Re-attaching wheel/keydown listeners."); setTimeout(() => { scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false }); window.addEventListener('keydown', handleKeyDown); }, 100); }
+                if (isDesktopJsScrollActive()) { console.log("AnimateScroll: Re-attaching wheel/keydown listeners."); setTimeout(() => { scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false }); window.addEventListener('keydown', handleKeyDown); }, 100); } // Added slight delay before re-attaching
                 params.onComplete?.();
             },
             onInterrupt: () => {
@@ -96,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
      // Helper to find the currently 'active' section index
      const getCurrentSectionIndex = () => { /* ... same ... */ if (!scrollSnapContainer) return 0; const scrollPosition = scrollSnapContainer.scrollTop; const viewportHeight = scrollSnapContainer.clientHeight; let bestMatchIndex = 0; let minDistance = Infinity; allNavTargets.forEach((section, index) => { const targetPos = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - targetPos); if (distance < minDistance) { minDistance = distance; bestMatchIndex = index; } }); if (scrollPosition + viewportHeight >= scrollSnapContainer.scrollHeight - 20) { bestMatchIndex = allNavTargets.length - 1; } return bestMatchIndex; };
 
-    // *** RESTORED: GSAP Smooth Scrolling for Internal Links using animateScroll wrapper ***
+    // GSAP Smooth Scrolling for Internal Links using animateScroll wrapper
     internalLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             const href = link.getAttribute('href');
@@ -142,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollToTopButton?.addEventListener('click', () => {
         console.log("Scroll-to-top button clicked.");
         const scrollTarget = getScrollTarget();
-        animateScroll(scrollTarget, linkScrollDuration, { // Use link duration/ease for consistency?
+        animateScroll(scrollTarget, linkScrollDuration, { // Use link duration/ease for consistency
             scrollTo: 0,
             ease: linkScrollEase
         });
@@ -158,9 +159,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleKeyDown = (event) => { /* ... same logic ... */ if (!isDesktopJsScrollActive()) return; const activeElement = document.activeElement; const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT'); if (isInputFocused && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) return; if (isAnimating) return; let targetIndex = -1; const currentIndex = getCurrentSectionIndex(); if (event.key === 'ArrowDown') targetIndex = Math.min(currentIndex + 1, allNavTargets.length - 1); else if (event.key === 'ArrowUp') targetIndex = Math.max(currentIndex - 1, 0); else { return; } if (targetIndex !== currentIndex) { event.preventDefault(); const targetSection = allNavTargets[targetIndex]; if (targetSection && targetSection.id) { const targetScrollY = calculateConsistentTargetY(targetSection); animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY }, ease: sectionScrollEase }); } } };
 
 
-    // --- Contact Form Validation & Submission --- (Reverted to V38 default handling)
+    // --- Contact Form Validation & Submission --- (Default handling)
      const validateContactField = (field) => { /* ... V38 basic validation ... */ let isValid = true; const errorElement = contactForm?.querySelector(`.error-message[data-for="${field.name}"]`); const value = field.value.trim(); field.classList.remove('input-error'); if (errorElement) errorElement.style.display = 'none'; if (field.required && !value) { isValid = false; } else if (field.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { isValid = false; if(errorElement) errorElement.textContent = "A valid email is required."; } else if (field.type === 'date' && value) { try { const d = new Date(value + 'T00:00:00'), t = new Date(); t.setHours(0,0,0,0); if (isNaN(d.getTime()) || d < t) isValid = false; if(errorElement && !isValid) errorElement.textContent = "Date must be today or later"; } catch { isValid = false; if(errorElement) errorElement.textContent = "Invalid date";} } if (!isValid && errorElement) { if(!errorElement.textContent) errorElement.textContent = "Required"; errorElement.style.display = 'block'; field.classList.add('input-error'); } return isValid; };
-    contactForm?.addEventListener('submit', (e) => { console.log("Contact form submit triggered (V38 Handling)."); let isFormValid = true; const formMsgElement = contactForm?.querySelector('#form-message'); if (formMsgElement) formMsgElement.classList.add('hidden'); contactForm.querySelectorAll('[required]').forEach(field => { if (!validateContactField(field)) { isFormValid = false; } }); if (!isFormValid) { console.log("Contact form validation failed. Preventing default submission."); e.preventDefault(); alert("Please fill out all required fields correctly."); const firstError = contactForm.querySelector('.input-error'); firstError?.focus(); scrollIntoViewIfNeeded(firstError); } else { console.log("Contact form valid. Allowing default HTML/Netlify submission."); const submitBtn = contactForm.querySelector('#submit-button'); if(submitBtn) submitBtn.disabled = true; } });
+    contactForm?.addEventListener('submit', (e) => { console.log("Contact form submit triggered (Default Handling)."); let isFormValid = true; const formMsgElement = contactForm?.querySelector('#form-message'); if (formMsgElement) formMsgElement.classList.add('hidden'); contactForm.querySelectorAll('[required]').forEach(field => { if (!validateContactField(field)) { isFormValid = false; } }); if (!isFormValid) { console.log("Contact form validation failed. Preventing default submission."); e.preventDefault(); // Keep preventDefault for invalid forms
+         // Show general error message or alert
+         alert("Please fill out all required fields correctly.");
+         const firstError = contactForm.querySelector('.input-error');
+         firstError?.focus();
+         scrollIntoViewIfNeeded(firstError?.closest('.input-group') || firstError); } else { console.log("Contact form valid. Allowing default HTML/Netlify submission."); const submitBtn = contactForm.querySelector('#submit-button'); if(submitBtn) submitBtn.disabled = true; /* Let Netlify handle it */ } });
      contactForm?.querySelectorAll('input[required], textarea[required]').forEach(field => { field.addEventListener('blur', () => validateContactField(field)); });
 
 
@@ -177,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const setupScrollListeners = () => { const currentScrollTarget = getScrollTarget(); window.removeEventListener('scroll', debouncedNavHandler); window.removeEventListener('scroll', debouncedScrollToTopHandler); window.removeEventListener('keydown', handleKeyDown); scrollSnapContainer?.removeEventListener('scroll', debouncedNavHandler); scrollSnapContainer?.removeEventListener('scroll', debouncedScrollToTopHandler); scrollSnapContainer?.removeEventListener('wheel', handleWheel); if (currentScrollTarget === window) { window.addEventListener('scroll', debouncedNavHandler, { passive: true }); window.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true }); } else { scrollSnapContainer.addEventListener('scroll', debouncedNavHandler, { passive: true }); scrollSnapContainer.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true }); scrollSnapContainer.addEventListener('wheel', handleWheel, { passive: false }); window.addEventListener('keydown', handleKeyDown); } };
     setupScrollListeners();
     handleScrollToTopVisibility();
-    setTimeout(handleActiveNav, 150);
+    setTimeout(handleActiveNav, 150); // Initial nav check
     window.addEventListener('resize', debounce(() => { setupScrollListeners(); handleActiveNav(); handleScrollToTopVisibility(); }, 250));
     // Listener for scroll-to-top uses animateScroll wrapper now
     scrollToTopButton?.addEventListener('click', () => {
