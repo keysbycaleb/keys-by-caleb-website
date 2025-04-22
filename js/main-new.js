@@ -1,13 +1,13 @@
 /**
- * Main JavaScript for Keys by Caleb Website (V49 - Smoother Scroll Animation)
+ * Main JavaScript for Keys by Caleb Website (V50 - Overwrite True & Immediate Re-attach)
  * Handles scroll-to-top, active nav highlighting, GSAP smooth scroll (links),
  * contact form (default HTML handling), tsParticles hero animation (Float Effect), footer copyright year.
  * Implements JS-driven section scrolling for Wheel/Trackpad and Keyboard on desktop.
- * **Changed scroll ease to expo.out and reset accumulator immediately on trigger.**
+ * **Changed GSAP overwrite to true and removed listener re-attach delay on complete.**
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb NEW JS Initialized (V49 - Smoother Scroll Animation).");
+    console.log("Keys by Caleb NEW JS Initialized (V50 - Overwrite True & Immediate Re-attach).");
 
     // --- GSAP Plugin Registration ---
     if (typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined') {
@@ -67,13 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Animate scroll with GSAP (Wrapper function used by all programmatic scrolls)
     const animateScroll = (target, duration, params) => {
-        // Use the ease provided in params, or default to the globally defined sectionScrollEase
-        const ease = params.ease || sectionScrollEase;
-        // console.log(`AnimateScroll START - Target Y: ${params?.scrollTo?.y?.toFixed(0)}, Duration: ${duration}s, Ease: ${ease}`);
+        const ease = params.ease || sectionScrollEase; // Default to section ease
+        // console.log(`AnimateScroll START - Y: ${params?.scrollTo?.y?.toFixed(0)}, Ease: ${ease}`);
 
         if (isAnimating) {
-            // console.warn(`AnimateScroll BLOCKED - animation already in progress.`);
-            return;
+             // console.warn(`AnimateScroll BLOCKED - animation already in progress.`);
+             return;
         }
         isAnimating = true;
 
@@ -86,29 +85,28 @@ document.addEventListener('DOMContentLoaded', () => {
         gsap.to(target, {
             duration: duration,
             scrollTo: params.scrollTo,
-            ease: ease, // Use determined ease
-            overwrite: 'auto',
+            ease: ease,
+            overwrite: true, // *** CHANGED TO true ***
             onComplete: () => {
                 // console.log(`AnimateScroll COMPLETE. Setting isAnimating = false.`);
                 isAnimating = false;
-                // Reset accumulator only AFTER animation completes successfully
-                // accumulatedDeltaY = 0; // Keep reset here for safety after completion
-                // Re-attach listeners after a short delay
+                accumulatedDeltaY = 0; // Reset accumulator
+                // Re-attach listeners IMMEDIATELY on complete
                 if (isDesktopJsScrollActive()) {
-                    setTimeout(() => {
-                        scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
-                        window.addEventListener('keydown', handleKeyDown);
-                    }, 50);
+                    // console.log("Re-attaching listeners onComplete.");
+                    scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
+                    window.addEventListener('keydown', handleKeyDown);
+                    // *** REMOVED setTimeout ***
                 }
                 params.onComplete?.();
             },
             onInterrupt: () => {
                 // console.error(`>>> GSAP AnimateScroll INTERRUPTED. Setting isAnimating = false.`);
                 isAnimating = false;
-                // Reset accumulator on interrupt too
-                accumulatedDeltaY = 0;
+                accumulatedDeltaY = 0; // Reset accumulator
                  // Re-attach listeners immediately on interrupt
                  if (isDesktopJsScrollActive()) {
+                     // console.log("Re-attaching listeners onInterrupt.");
                      scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
                      window.addEventListener('keydown', handleKeyDown);
                  }
@@ -187,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const targetScrollY = calculateConsistentTargetY(targetSection);
                         // console.log(`%c[${now}ms] handleWheel: Animating to Section: ${targetSection.id} (Y: ${targetScrollY.toFixed(0)})`, 'color: purple; font-weight: bold;');
 
-                        // *** RESET ACCUMULATOR IMMEDIATELY ***
+                        // Reset accumulator immediately BEFORE starting animation
                         accumulatedDeltaY = 0;
                         // console.log(`%c[${now}ms] handleWheel: Reset accumulator BEFORE starting animation.`, 'color: purple;');
 
@@ -198,8 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                     }
                 } else {
-                    // If target is the same, maybe don't need to reset here?
-                    // Resetting prevents buildup if scrolling against boundary.
+                    // If target is the same, reset accumulator to prevent buildup if scrolling against boundary.
                      accumulatedDeltaY = 0;
                 }
             }
