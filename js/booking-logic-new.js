@@ -1,5 +1,5 @@
 /**
- * JavaScript for Keys by Caleb - Multi-Step Booking Pages (V2.14 - Added Places Autocomplete)
+ * JavaScript for Keys by Caleb - Multi-Step Booking Pages (V2.15 - Fixed Hourly Button Logic)
  *
  * Handles:
  * - Google Places Autocomplete for venue address input.
@@ -38,7 +38,10 @@ function initMapAutocomplete() {
              if (place && place.formatted_address) {
                 addressInput.value = place.formatted_address;
                 // Trigger validation clearance if needed after selection
-                clearFieldError(addressInput);
+                // Ensure clearFieldError is accessible or handle error state differently
+                 if (typeof clearFieldError === 'function') {
+                    clearFieldError(addressInput);
+                 }
              }
         });
         console.log("Autocomplete attached to #venue_address.");
@@ -50,7 +53,7 @@ function initMapAutocomplete() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb - Booking Page JS Initialized (V2.14 - Added Places Autocomplete)");
+    console.log("Keys by Caleb - Booking Page JS Initialized (V2.15 - Fixed Hourly Button Logic)");
 
     gsap.registerPlugin(ScrollToPlugin);
 
@@ -66,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!bookingForm) { console.error("Booking form not found."); return; }
     const formSteps = Array.from(bookingForm.querySelectorAll('.booking-step'));
     const TOTAL_STEPS = formSteps.length;
-    if (TOTAL_STEPS < 5 || TOTAL_STEPS > 6) { console.error(`Incorrect steps found (${TOTAL_STEPS}).`); return; }
+    if (TOTAL_STEPS < 5 || TOTAL_STEPS > 6) { console.error(`Incorrect steps found (${TOTAL_STEPS}). Expecting 5 or 6.`); return; }
     const stepIndicators = Array.from(bookingForm.querySelectorAll('.step-indicator'));
     const nextButton = document.getElementById('next-button'); const prevButton = document.getElementById('prev-button'); const proceedToDisclaimersButton = document.getElementById('proceed-to-disclaimers-button'); const paymentButton = document.getElementById('payment-button'); const formMessage = document.getElementById('form-message'); const finalStepElement = formSteps[TOTAL_STEPS - 1]; const finalStepErrorMessage = finalStepElement?.querySelector('#final-step-error');
     const confirmationMessage = document.getElementById('confirmation-message'); const bookingCard = document.querySelector('.booking-card'); const loaderOverlay = document.getElementById('booking-loader-overlay'); const loaderText = document.getElementById('loader-text'); const stepsContainer = document.querySelector('.steps-container'); const summaryFields = { date: document.getElementById('summary-date'), time: document.getElementById('summary-time'), event_type: document.getElementById('summary-event_type'), event_type_hourly: document.getElementById('summary-event_type_hourly'), estimated_duration: document.getElementById('summary-estimated_duration'), venue_name: document.getElementById('summary-venue_name'), venue_address: document.getElementById('summary-venue_address'), piano_availability: document.getElementById('summary-piano_availability'), name: document.getElementById('summary-name'), email: document.getElementById('summary-email'), phone: document.getElementById('summary-phone'), referral: document.getElementById('summary-referral'), message: document.getElementById('summary-message'), }; const confirmName = document.getElementById('confirm-name'); const confirmEmail = document.getElementById('confirm-email'); const header = document.getElementById('main-header'); const scrollToTopButton = document.getElementById('scroll-to-top'); const currentYearSpan = document.getElementById('current-year'); const dateField = document.getElementById('event_date');
@@ -75,10 +78,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const PENULTIMATE_VISIBLE_STEP_INDEX = TOTAL_STEPS - 2;
     // Index of the FINAL step (where payment button resides)
     const PAYMENT_STEP_INDEX = TOTAL_STEPS - 1;
-    console.log(`Detected ${TOTAL_STEPS} steps. Penultimate Visible Idx: ${PENULTIMATE_VISIBLE_STEP_INDEX}. Payment Step Idx (Final): ${PAYMENT_STEP_INDEX}.`);
+    console.log(`Detected ${TOTAL_STEPS} steps. Penultimate Visible Idx: ${PENULTIMATE_VISIBLE_STEP_INDEX}. Payment Step Idx (Final): ${PAYMENT_STEP_INDEX}. Separate Disclaimer Step: ${HAS_SEPARATE_DISCLAIMER_STEP}`);
     let currentStepIndex = 0; let isTransitioning = false; let formAttemptedSubmit = false;
 
     // --- Helper Functions ---
+    // NOTE: Added clearFieldError definition *before* it's used in initMapAutocomplete listener
+    const clearFieldError = (field) => { if (!field) return; const name = field.name; const type = field.type; const errorElement = bookingForm?.querySelector(`.error-message[data-for="${name}"]`); removeClass(field, 'input-error'); setAriaAttribute(field, 'aria-invalid', 'false'); if (errorElement) { hideElement(errorElement); errorElement.textContent = ''; const desc = field.getAttribute('aria-describedby'); if(desc && desc.includes(errorElement.id)) { const newDesc = desc.replace(errorElement.id, '').trim(); if(newDesc) setAriaAttribute(field, 'aria-describedby', newDesc); else field.removeAttribute('aria-describedby');}} const label = field.closest('label'); if (label && type === 'checkbox') removeClass(label, 'label-error'); };
     const getElement = (selector) => document.querySelector(selector); const getAllElements = (selector) => Array.from(document.querySelectorAll(selector)); const showElement = (el) => el?.classList.remove('hidden'); const hideElement = (el) => el?.classList.add('hidden'); const addClass = (el, className) => el?.classList.add(className); const removeClass = (el, className) => el?.classList.remove(className); const hasClass = (el, className) => el?.classList.contains(className); const setAriaAttribute = (el, attr, value) => el?.setAttribute(attr, value); const setVisibility = (el, visible) => { if (el) el.style.visibility = visible ? 'visible' : 'hidden'; }; const debounce = (func, wait) => { let timeout; return function executedFunction(...args) { const later = () => { clearTimeout(timeout); func.apply(this, args); }; clearTimeout(timeout); timeout = setTimeout(later, wait); }; };
     const getHeaderHeight = () => header?.offsetHeight || 70; const scrollIntoViewIfNeeded = (element) => { if (!element) return; const rect = element.getBoundingClientRect(); const headerHeight = getHeaderHeight(); const isAbove = rect.top < headerHeight + 10; const isBelow = rect.bottom > window.innerHeight - 10; if (isAbove || isBelow) { const elementTopRelativeToDocument = window.scrollY + rect.top; const targetScrollY = elementTopRelativeToDocument - headerHeight - 30; window.scrollTo({ top: targetScrollY, behavior: 'smooth' }); } };
     const disableButton = (button) => { if (button) { button.disabled = true; addClass(button, 'btn-disabled'); } }; const enableButton = (button) => { if (button) { button.disabled = false; removeClass(button, 'btn-disabled'); } };
@@ -91,7 +96,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Core Multi-Step Logic ---
     const updateStepIndicators = (index) => { /* ... same logic ... */ stepIndicators.forEach((indicator, i) => { const stepNumber = parseInt(indicator.dataset.step || '0', 10) - 1; const connector = indicator.previousElementSibling; removeClass(indicator, 'active'); removeClass(indicator, 'completed'); setAriaAttribute(indicator, 'aria-selected', 'false'); if (stepNumber === index) { addClass(indicator, 'active'); setAriaAttribute(indicator, 'aria-selected', 'true'); if (connector && hasClass(indicator.previousElementSibling?.previousElementSibling, 'completed')) { addClass(connector, 'completed'); } else if (connector) { removeClass(connector, 'completed'); } } else if (stepNumber < index) { addClass(indicator, 'completed'); const nextConnector = indicator.nextElementSibling; if (nextConnector && hasClass(nextConnector, 'step-connector')) { addClass(nextConnector, 'completed'); } } else { if (connector && hasClass(connector, 'step-connector')) { if (!hasClass(indicator.previousElementSibling?.previousElementSibling, 'completed')) { removeClass(connector, 'completed'); } } const nextConnector = indicator.nextElementSibling; if (nextConnector && hasClass(nextConnector, 'step-connector')) { removeClass(nextConnector, 'completed'); } } }); };
-    const updateNavigationButtons = (index) => { /* ... same logic V2.10 ... */ console.log(`Updating buttons for step index: ${index}`); setVisibility(prevButton, index > 0); hideElement(nextButton); hideElement(proceedToDisclaimersButton); hideElement(paymentButton); enableButton(prevButton); if (index < PENULTIMATE_VISIBLE_STEP_INDEX) { console.log("Showing 'Next' button"); showElement(nextButton); enableButton(nextButton); } else if (index === PENULTIMATE_VISIBLE_STEP_INDEX) { if (HAS_SEPARATE_DISCLAIMER_STEP) { console.log("Showing 'Proceed to Disclaimers' button"); showElement(proceedToDisclaimersButton); enableButton(proceedToDisclaimersButton); } else { console.log("Showing 'Payment' button (5-step final)"); showElement(paymentButton); updatePaymentButtonState(); } } else if (index === PAYMENT_STEP_INDEX) { console.log("Showing 'Payment' button (Final Step)"); showElement(paymentButton); updatePaymentButtonState(); } };
+
+    // *** CORRECTED Button Logic (V2.15) ***
+    const updateNavigationButtons = (index) => {
+        console.log(`Updating buttons for step index: ${index}`);
+        setVisibility(prevButton, index > 0);
+        hideElement(nextButton);
+        hideElement(proceedToDisclaimersButton);
+        hideElement(paymentButton);
+        enableButton(prevButton); // Ensure prev is enabled if visible
+
+        if (index < PAYMENT_STEP_INDEX) {
+            // If NOT the final step
+            if (index === PENULTIMATE_VISIBLE_STEP_INDEX && HAS_SEPARATE_DISCLAIMER_STEP) {
+                // Special case: 6-step form, step before final -> Show "Proceed"
+                console.log("Showing 'Proceed to Disclaimers' button");
+                showElement(proceedToDisclaimersButton);
+                enableButton(proceedToDisclaimersButton);
+            } else {
+                // All other steps before final (including penultimate on 5-step) -> Show "Next"
+                console.log("Showing 'Next' button");
+                showElement(nextButton);
+                enableButton(nextButton);
+            }
+        } else if (index === PAYMENT_STEP_INDEX) {
+            // If it IS the final step -> Show "Payment"
+            console.log("Showing 'Payment' button (Final Step)");
+            showElement(paymentButton);
+            updatePaymentButtonState(); // Enable/disable based on checkboxes
+        }
+    };
+    // *** End CORRECTED Button Logic ***
+
     const updateBookingSummary = () => { /* ... same logic V2.10 ... */ if (!bookingForm) return; const formData = new FormData(bookingForm); if (summaryFields.date) summaryFields.date.textContent = formatDate(formData.get('event_date')); if (summaryFields.time) summaryFields.time.textContent = formatTime(formData.get('event_time')); if (summaryFields.venue_name) summaryFields.venue_name.textContent = getValue(formData, 'venue_name', 'Not specified'); if (summaryFields.venue_address) summaryFields.venue_address.textContent = getValue(formData, 'venue_address'); if (summaryFields.piano_availability) summaryFields.piano_availability.textContent = formatSelection(formData.get('piano_availability'), 'Unknown'); if (summaryFields.name) summaryFields.name.textContent = getValue(formData, 'name'); if (summaryFields.email) summaryFields.email.textContent = getValue(formData, 'email'); if (summaryFields.phone) summaryFields.phone.textContent = formatPhone(formData.get('phone')); if (summaryFields.referral) summaryFields.referral.textContent = formatSelection(formData.get('referral'), 'Not specified'); if (summaryFields.event_type) summaryFields.event_type.textContent = formatSelection(formData.get('event_type'), 'Not selected'); if (summaryFields.event_type_hourly) summaryFields.event_type_hourly.textContent = formatSelection(formData.get('event_type_hourly'), 'Not selected'); if (summaryFields.estimated_duration) summaryFields.estimated_duration.textContent = formatDuration(formData.get('estimated_duration')); if (summaryFields.message) summaryFields.message.textContent = formatNotes(formData.get('message') || formData.get('message_hourly')); const nameValue = getValue(formData, 'name', 'there'); const emailValue = getValue(formData, 'email', 'your email address'); if (confirmName) confirmName.textContent = nameValue; if (confirmEmail) confirmEmail.textContent = emailValue; };
     const navigateToStep = (targetIndex, isMovingForward = true) => { /* ... same logic V2.10 ... */ console.log(`MapsToStep: current=${currentStepIndex}, target=${targetIndex}, forward=${isMovingForward}`); if (isTransitioning || targetIndex < 0 || targetIndex >= TOTAL_STEPS || targetIndex === currentStepIndex) { console.log(`MapsToStep blocked: transitioning=${isTransitioning}, target valid=${targetIndex >= 0 && targetIndex < TOTAL_STEPS}, target same=${targetIndex === currentStepIndex}`); return; } isTransitioning = true; if (targetIndex === PENULTIMATE_VISIBLE_STEP_INDEX) { console.log("Navigating to Review Step (visually) - updating summary."); updateBookingSummary(); } if (currentStepIndex === PAYMENT_STEP_INDEX) { hideFormMessage(finalStepErrorMessage); } const currentStepElement = formSteps[currentStepIndex]; const targetStepElement = formSteps[targetIndex]; disableButton(prevButton); disableButton(nextButton); disableButton(proceedToDisclaimersButton); disableButton(paymentButton); if (currentStepElement) { addClass(currentStepElement, 'exiting'); setAriaAttribute(currentStepElement, 'aria-hidden', 'true'); } if (targetStepElement) { removeClass(targetStepElement, 'exiting'); addClass(targetStepElement, 'active'); setAriaAttribute(targetStepElement, 'aria-hidden', 'false'); } updateStepIndicators(targetIndex); updateNavigationButtons(targetIndex); setTimeout(() => { if (currentStepElement) { removeClass(currentStepElement, 'active'); removeClass(currentStepElement, 'exiting'); } currentStepIndex = targetIndex; isTransitioning = false; console.log(`MapsToStep complete. New currentStepIndex: ${currentStepIndex}`); updateNavigationButtons(currentStepIndex); if (bookingCard) { const stepTitle = targetStepElement?.querySelector('.step-title'); scrollIntoViewIfNeeded(stepTitle || targetStepElement || bookingCard); } }, CSS_TRANSITION_DURATION); };
 
@@ -106,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     // *** showFieldError / clearFieldError: Handle UI updates ***
     const showFieldError = (field) => { if (!field) return; const name = field.name; const type = field.type; const errorElement = bookingForm?.querySelector(`.error-message[data-for="${name}"]`); let defaultErrorMessage = "Required"; if(type === 'email') defaultErrorMessage = "Valid Email Required"; else if(type === 'date') defaultErrorMessage = "Future Date Required"; else if(type === 'time') defaultErrorMessage = "Required"; else if(type === 'tel') defaultErrorMessage = "Invalid Format"; else if(type === 'number' && field.min) defaultErrorMessage = `Min ${field.min} required`; else if(type === 'checkbox') defaultErrorMessage = "Required"; addClass(field, 'input-error'); setAriaAttribute(field, 'aria-invalid', 'true'); if (errorElement) { errorElement.textContent = defaultErrorMessage; showElement(errorElement); const desc = field.getAttribute('aria-describedby') || ''; if (!desc.includes(errorElement.id)){field.setAttribute('aria-describedby', (desc + ' ' + errorElement.id).trim());} } const label = field.closest('label'); if (label && type === 'checkbox') addClass(label, 'label-error'); };
-    const clearFieldError = (field) => { if (!field) return; const name = field.name; const type = field.type; const errorElement = bookingForm?.querySelector(`.error-message[data-for="${name}"]`); removeClass(field, 'input-error'); setAriaAttribute(field, 'aria-invalid', 'false'); if (errorElement) { hideElement(errorElement); errorElement.textContent = ''; const desc = field.getAttribute('aria-describedby'); if(desc && desc.includes(errorElement.id)) { const newDesc = desc.replace(errorElement.id, '').trim(); if(newDesc) setAriaAttribute(field, 'aria-describedby', newDesc); else field.removeAttribute('aria-describedby');}} const label = field.closest('label'); if (label && type === 'checkbox') removeClass(label, 'label-error'); };
+    // Clear field error definition moved up for initMapAutocomplete
 
     // *** validateStep: Uses validateField for logic, calls show/clearFieldError for UI ***
     const validateStep = (stepIndex, showUIErrors = true) => {
