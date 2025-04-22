@@ -1,10 +1,10 @@
 /**
- * JavaScript for Keys by Caleb - Multi-Step Booking Pages (V2.13 - Fix Premature Validation & Submission Timing)
+ * JavaScript for Keys by Caleb - Multi-Step Booking Pages (V2.13 - Corrected Validation Trigger & Submit Timing)
  *
  * Handles:
  * - Dynamic detection of 5 or 6 steps.
  * - Multi-step form navigation.
- * - Input validation per step.
+ * - Input validation per step (Errors show on Next/Submit).
  * - Final step checkbox validation ONLY on final submit attempt.
  * - Netlify form submission ONLY on final submit attempt.
  * - Redirect to Stripe on final submit attempt.
@@ -12,7 +12,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb - Booking Page JS Initialized (V2.13 - Fix Premature Validation & Submission Timing)");
+    console.log("Keys by Caleb - Booking Page JS Initialized (V2.13 - Corrected Validation Trigger & Submit Timing)");
 
     gsap.registerPlugin(ScrollToPlugin);
 
@@ -33,12 +33,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextButton = document.getElementById('next-button'); const prevButton = document.getElementById('prev-button'); const proceedToDisclaimersButton = document.getElementById('proceed-to-disclaimers-button'); const paymentButton = document.getElementById('payment-button'); const formMessage = document.getElementById('form-message'); const finalStepElement = formSteps[TOTAL_STEPS - 1]; const finalStepErrorMessage = finalStepElement?.querySelector('#final-step-error');
     const confirmationMessage = document.getElementById('confirmation-message'); const bookingCard = document.querySelector('.booking-card'); const loaderOverlay = document.getElementById('booking-loader-overlay'); const loaderText = document.getElementById('loader-text'); const stepsContainer = document.querySelector('.steps-container'); const summaryFields = { date: document.getElementById('summary-date'), time: document.getElementById('summary-time'), event_type: document.getElementById('summary-event_type'), event_type_hourly: document.getElementById('summary-event_type_hourly'), estimated_duration: document.getElementById('summary-estimated_duration'), venue_name: document.getElementById('summary-venue_name'), venue_address: document.getElementById('summary-venue_address'), piano_availability: document.getElementById('summary-piano_availability'), name: document.getElementById('summary-name'), email: document.getElementById('summary-email'), phone: document.getElementById('summary-phone'), referral: document.getElementById('summary-referral'), message: document.getElementById('summary-message'), }; const confirmName = document.getElementById('confirm-name'); const confirmEmail = document.getElementById('confirm-email'); const header = document.getElementById('main-header'); const scrollToTopButton = document.getElementById('scroll-to-top'); const currentYearSpan = document.getElementById('current-year'); const dateField = document.getElementById('event_date');
     const HAS_SEPARATE_DISCLAIMER_STEP = TOTAL_STEPS === 6;
+    // Index of the step VISUALLY BEFORE the final step (where summary is reviewed)
     const PENULTIMATE_VISIBLE_STEP_INDEX = TOTAL_STEPS - 2;
+    // Index of the FINAL step (where payment button resides)
     const PAYMENT_STEP_INDEX = TOTAL_STEPS - 1;
-    console.log(`Detected ${TOTAL_STEPS} steps. Has separate disclaimer: ${HAS_SEPARATE_DISCLAIMER_STEP}. Penultimate Visible Step Index: ${PENULTIMATE_VISIBLE_STEP_INDEX}. Payment Step Index (final): ${PAYMENT_STEP_INDEX}.`);
+    console.log(`Detected ${TOTAL_STEPS} steps. Penultimate Visible Idx: ${PENULTIMATE_VISIBLE_STEP_INDEX}. Payment Step Idx (Final): ${PAYMENT_STEP_INDEX}.`);
     let currentStepIndex = 0; let isTransitioning = false; let formAttemptedSubmit = false;
 
-    // --- Helper Functions --- (Same basic helpers)
+    // --- Helper Functions ---
     const getElement = (selector) => document.querySelector(selector); const getAllElements = (selector) => Array.from(document.querySelectorAll(selector)); const showElement = (el) => el?.classList.remove('hidden'); const hideElement = (el) => el?.classList.add('hidden'); const addClass = (el, className) => el?.classList.add(className); const removeClass = (el, className) => el?.classList.remove(className); const hasClass = (el, className) => el?.classList.contains(className); const setAriaAttribute = (el, attr, value) => el?.setAttribute(attr, value); const setVisibility = (el, visible) => { if (el) el.style.visibility = visible ? 'visible' : 'hidden'; }; const debounce = (func, wait) => { let timeout; return function executedFunction(...args) { const later = () => { clearTimeout(timeout); func.apply(this, args); }; clearTimeout(timeout); timeout = setTimeout(later, wait); }; };
     const getHeaderHeight = () => header?.offsetHeight || 70; const scrollIntoViewIfNeeded = (element) => { if (!element) return; const rect = element.getBoundingClientRect(); const headerHeight = getHeaderHeight(); const isAbove = rect.top < headerHeight + 10; const isBelow = rect.bottom > window.innerHeight - 10; if (isAbove || isBelow) { const elementTopRelativeToDocument = window.scrollY + rect.top; const targetScrollY = elementTopRelativeToDocument - headerHeight - 30; window.scrollTo({ top: targetScrollY, behavior: 'smooth' }); } };
     const disableButton = (button) => { if (button) { button.disabled = true; addClass(button, 'btn-disabled'); } }; const enableButton = (button) => { if (button) { button.disabled = false; removeClass(button, 'btn-disabled'); } };
@@ -46,9 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const showFormMessage = (message, type = 'error', targetElement = formMessage) => { console.log(`Showing message (${type}) in ${targetElement?.id || 'default area'}: ${message}`); if (targetElement) { targetElement.textContent = message; targetElement.className = `form-message-area visible ${type}`; setAriaAttribute(targetElement, 'role', 'alert'); scrollIntoViewIfNeeded(targetElement); } };
     const hideFormMessage = (targetElement = formMessage) => { if (targetElement && hasClass(targetElement, 'visible')) { removeClass(targetElement, 'visible'); removeClass(targetElement, 'success'); removeClass(targetElement, 'error'); targetElement.textContent = ''; } };
 
-    // --- Data Formatting --- (Same)
+    // --- Data Formatting ---
     const getValue = (formData, key, defaultValue = '-') => formData.get(key)?.trim() || defaultValue; const formatDate = (dateStr) => { /* ... */ if (!dateStr) return '-'; try { const parts = dateStr.split('-'); if (parts.length !== 3) throw new Error("Invalid date format"); const year = parseInt(parts[0]); const month = parseInt(parts[1]) - 1; const day = parseInt(parts[2]); const date = new Date(Date.UTC(year, month, day)); if (isNaN(date.getTime())) throw new Error("Invalid date"); return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }); } catch { return '-'; } }; const formatTime = (timeStr) => { /* ... */ if (!timeStr) return '-'; try { const [hours, minutes] = timeStr.split(':'); if (hours === undefined || minutes === undefined) throw new Error("Invalid time format"); const date = new Date(); date.setHours(parseInt(hours), parseInt(minutes), 0, 0); if (isNaN(date.getTime())) throw new Error("Invalid time"); return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }); } catch { return '-'; } }; const formatPhone = (phoneStr) => { /* ... */ const rawValue = phoneStr?.trim(); if (!rawValue) return 'Not provided'; const cleaned = rawValue.replace(/\D/g, ''); const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/); if (match) { return `(${match[1]}) ${match[2]}-${match[3]}`; } return rawValue !== '-' ? rawValue : 'Not provided'; }; const formatSelection = (selectValue, defaultValue = '-') => { /* ... */ const value = selectValue?.trim(); if (!value || value === "Unknown") return defaultValue; return value.replace(/_/g, ' '); }; const formatNotes = (notesValue) => { /* ... */ const value = notesValue?.trim(); return value || 'No additional notes.'; }; const formatDuration = (durationStr) => { const val = durationStr?.trim(); return val ? `${val}` : '-'; };
-
 
     // --- Core Multi-Step Logic ---
     const updateStepIndicators = (index) => { /* ... same logic ... */ stepIndicators.forEach((indicator, i) => { const stepNumber = parseInt(indicator.dataset.step || '0', 10) - 1; const connector = indicator.previousElementSibling; removeClass(indicator, 'active'); removeClass(indicator, 'completed'); setAriaAttribute(indicator, 'aria-selected', 'false'); if (stepNumber === index) { addClass(indicator, 'active'); setAriaAttribute(indicator, 'aria-selected', 'true'); if (connector && hasClass(indicator.previousElementSibling?.previousElementSibling, 'completed')) { addClass(connector, 'completed'); } else if (connector) { removeClass(connector, 'completed'); } } else if (stepNumber < index) { addClass(indicator, 'completed'); const nextConnector = indicator.nextElementSibling; if (nextConnector && hasClass(nextConnector, 'step-connector')) { addClass(nextConnector, 'completed'); } } else { if (connector && hasClass(connector, 'step-connector')) { if (!hasClass(indicator.previousElementSibling?.previousElementSibling, 'completed')) { removeClass(connector, 'completed'); } } const nextConnector = indicator.nextElementSibling; if (nextConnector && hasClass(nextConnector, 'step-connector')) { removeClass(nextConnector, 'completed'); } } }); };
@@ -56,31 +57,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateBookingSummary = () => { /* ... same logic V2.10 ... */ if (!bookingForm) return; const formData = new FormData(bookingForm); if (summaryFields.date) summaryFields.date.textContent = formatDate(formData.get('event_date')); if (summaryFields.time) summaryFields.time.textContent = formatTime(formData.get('event_time')); if (summaryFields.venue_name) summaryFields.venue_name.textContent = getValue(formData, 'venue_name', 'Not specified'); if (summaryFields.venue_address) summaryFields.venue_address.textContent = getValue(formData, 'venue_address'); if (summaryFields.piano_availability) summaryFields.piano_availability.textContent = formatSelection(formData.get('piano_availability'), 'Unknown'); if (summaryFields.name) summaryFields.name.textContent = getValue(formData, 'name'); if (summaryFields.email) summaryFields.email.textContent = getValue(formData, 'email'); if (summaryFields.phone) summaryFields.phone.textContent = formatPhone(formData.get('phone')); if (summaryFields.referral) summaryFields.referral.textContent = formatSelection(formData.get('referral'), 'Not specified'); if (summaryFields.event_type) summaryFields.event_type.textContent = formatSelection(formData.get('event_type'), 'Not selected'); if (summaryFields.event_type_hourly) summaryFields.event_type_hourly.textContent = formatSelection(formData.get('event_type_hourly'), 'Not selected'); if (summaryFields.estimated_duration) summaryFields.estimated_duration.textContent = formatDuration(formData.get('estimated_duration')); if (summaryFields.message) summaryFields.message.textContent = formatNotes(formData.get('message') || formData.get('message_hourly')); const nameValue = getValue(formData, 'name', 'there'); const emailValue = getValue(formData, 'email', 'your email address'); if (confirmName) confirmName.textContent = nameValue; if (confirmEmail) confirmEmail.textContent = emailValue; };
     const navigateToStep = (targetIndex, isMovingForward = true) => { /* ... same logic V2.10 ... */ console.log(`MapsToStep: current=${currentStepIndex}, target=${targetIndex}, forward=${isMovingForward}`); if (isTransitioning || targetIndex < 0 || targetIndex >= TOTAL_STEPS || targetIndex === currentStepIndex) { console.log(`MapsToStep blocked: transitioning=${isTransitioning}, target valid=${targetIndex >= 0 && targetIndex < TOTAL_STEPS}, target same=${targetIndex === currentStepIndex}`); return; } isTransitioning = true; if (targetIndex === PENULTIMATE_VISIBLE_STEP_INDEX) { console.log("Navigating to Review Step (visually) - updating summary."); updateBookingSummary(); } if (currentStepIndex === PAYMENT_STEP_INDEX) { hideFormMessage(finalStepErrorMessage); } const currentStepElement = formSteps[currentStepIndex]; const targetStepElement = formSteps[targetIndex]; disableButton(prevButton); disableButton(nextButton); disableButton(proceedToDisclaimersButton); disableButton(paymentButton); if (currentStepElement) { addClass(currentStepElement, 'exiting'); setAriaAttribute(currentStepElement, 'aria-hidden', 'true'); } if (targetStepElement) { removeClass(targetStepElement, 'exiting'); addClass(targetStepElement, 'active'); setAriaAttribute(targetStepElement, 'aria-hidden', 'false'); } updateStepIndicators(targetIndex); updateNavigationButtons(targetIndex); setTimeout(() => { if (currentStepElement) { removeClass(currentStepElement, 'active'); removeClass(currentStepElement, 'exiting'); } currentStepIndex = targetIndex; isTransitioning = false; console.log(`MapsToStep complete. New currentStepIndex: ${currentStepIndex}`); updateNavigationButtons(currentStepIndex); if (bookingCard) { const stepTitle = targetStepElement?.querySelector('.step-title'); scrollIntoViewIfNeeded(stepTitle || targetStepElement || bookingCard); } }, CSS_TRANSITION_DURATION); };
 
+
     // --- Validation Logic ---
-    // *** MODIFIED: validateField - Now only returns true/false, UI handled separately ***
+    // *** validateField: Returns true/false, does NOT handle UI ***
     const validateField = (field) => {
         if (!field) return true; let isValid = true; const value = field.value.trim(); const type = field.type; const isRequired = field.required;
         if (isRequired) { if (type === 'checkbox' && !field.checked) isValid = false; else if (type !== 'checkbox' && value === '') isValid = false; }
         if (isValid && value !== '') { switch (type) { case 'email': if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) isValid = false; break; case 'date': try { const d = new Date(value + 'T00:00:00'), t = new Date(); t.setHours(0,0,0,0); if (isNaN(d.getTime()) || d < t) isValid = false; } catch { isValid = false; } break; case 'tel': if (!PHONE_PATTERN.test(value)) isValid = false; break; case 'number': if (field.min && parseFloat(value) < parseFloat(field.min)) isValid = false; break; } }
-        // console.log(`Field ${field.name || field.id} valid: ${isValid}`); // Verbose log
         return isValid;
     };
-    // *** NEW: showFieldError / clearFieldError - Separate UI handling ***
-    const showFieldError = (field) => {
-        if (!field) return;
-        const name = field.name; const type = field.type;
-        const errorElement = bookingForm?.querySelector(`.error-message[data-for="${name}"]`);
-        let defaultErrorMessage = "Required"; if(type === 'email') defaultErrorMessage = "Valid Email Required"; else if(type === 'date') defaultErrorMessage = "Future Date Required"; else if(type === 'time') defaultErrorMessage = "Required"; else if(type === 'tel') defaultErrorMessage = "Invalid Format"; else if(type === 'number' && field.min) defaultErrorMessage = `Min ${field.min} required`; else if(type === 'checkbox') defaultErrorMessage = "Required";
-        addClass(field, 'input-error'); setAriaAttribute(field, 'aria-invalid', 'true'); if (errorElement) { errorElement.textContent = defaultErrorMessage; showElement(errorElement); const desc = field.getAttribute('aria-describedby') || ''; if (!desc.includes(errorElement.id)){field.setAttribute('aria-describedby', (desc + ' ' + errorElement.id).trim());} } const label = field.closest('label'); if (label && type === 'checkbox') addClass(label, 'label-error');
-    };
-    const clearFieldError = (field) => {
-        if (!field) return;
-        const name = field.name; const type = field.type;
-        const errorElement = bookingForm?.querySelector(`.error-message[data-for="${name}"]`);
-        removeClass(field, 'input-error'); setAriaAttribute(field, 'aria-invalid', 'false'); if (errorElement) { hideElement(errorElement); errorElement.textContent = ''; const desc = field.getAttribute('aria-describedby'); if(desc && desc.includes(errorElement.id)) { const newDesc = desc.replace(errorElement.id, '').trim(); if(newDesc) setAriaAttribute(field, 'aria-describedby', newDesc); else field.removeAttribute('aria-describedby');}} const label = field.closest('label'); if (label && type === 'checkbox') removeClass(label, 'label-error');
-    };
+    // *** showFieldError / clearFieldError: Handle UI updates ***
+    const showFieldError = (field) => { if (!field) return; const name = field.name; const type = field.type; const errorElement = bookingForm?.querySelector(`.error-message[data-for="${name}"]`); let defaultErrorMessage = "Required"; if(type === 'email') defaultErrorMessage = "Valid Email Required"; else if(type === 'date') defaultErrorMessage = "Future Date Required"; else if(type === 'time') defaultErrorMessage = "Required"; else if(type === 'tel') defaultErrorMessage = "Invalid Format"; else if(type === 'number' && field.min) defaultErrorMessage = `Min ${field.min} required`; else if(type === 'checkbox') defaultErrorMessage = "Required"; addClass(field, 'input-error'); setAriaAttribute(field, 'aria-invalid', 'true'); if (errorElement) { errorElement.textContent = defaultErrorMessage; showElement(errorElement); const desc = field.getAttribute('aria-describedby') || ''; if (!desc.includes(errorElement.id)){field.setAttribute('aria-describedby', (desc + ' ' + errorElement.id).trim());} } const label = field.closest('label'); if (label && type === 'checkbox') addClass(label, 'label-error'); };
+    const clearFieldError = (field) => { if (!field) return; const name = field.name; const type = field.type; const errorElement = bookingForm?.querySelector(`.error-message[data-for="${name}"]`); removeClass(field, 'input-error'); setAriaAttribute(field, 'aria-invalid', 'false'); if (errorElement) { hideElement(errorElement); errorElement.textContent = ''; const desc = field.getAttribute('aria-describedby'); if(desc && desc.includes(errorElement.id)) { const newDesc = desc.replace(errorElement.id, '').trim(); if(newDesc) setAriaAttribute(field, 'aria-describedby', newDesc); else field.removeAttribute('aria-describedby');}} const label = field.closest('label'); if (label && type === 'checkbox') removeClass(label, 'label-error'); };
 
-    // validateStep (Uses validateField for logic, separate UI update)
+    // *** validateStep: Uses validateField for logic, calls show/clearFieldError for UI ***
     const validateStep = (stepIndex, showUIErrors = true) => {
          let isStepValid = true;
          const stepElement = formSteps[stepIndex];
@@ -93,11 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
              const hasValue = field.value.trim() !== '';
              let fieldIsValid = true;
 
-             // Check validity internally first
              if (isRequired || (needsFormatCheck && hasValue)) {
-                 fieldIsValid = validateField(field); // Check logic
+                 fieldIsValid = validateField(field); // Check logic only
                  if (!fieldIsValid) {
-                     isStepValid = false; // Mark step invalid
+                     isStepValid = false;
                      console.warn(`   Field validation FAILED for: ${field.name || field.id}`);
                      if (showUIErrors) { showFieldError(field); } // Show UI error only if requested
                  } else {
@@ -111,60 +100,65 @@ document.addEventListener('DOMContentLoaded', () => {
          return isStepValid;
      };
 
-    // *** UPDATED: updatePaymentButtonState - Only checks state, doesn't show errors ***
+    // *** updatePaymentButtonState: Only enables/disables button based on checked state ***
     const updatePaymentButtonState = () => {
         const finalStepElement = formSteps[PAYMENT_STEP_INDEX]; if (!finalStepElement) return;
         const checkboxes = finalStepElement.querySelectorAll('input[type="checkbox"][required]');
-        if (checkboxes.length === 0) { enableButton(paymentButton); return; }
+        if (checkboxes.length === 0) { enableButton(paymentButton); return; } // Enable if no checkboxes
         let allChecked = true;
         checkboxes.forEach(checkbox => { if (!checkbox.checked) { allChecked = false; } });
         if (allChecked) { enableButton(paymentButton); } else { disableButton(paymentButton); }
-         console.log(`Payment button state updated. Enabled: ${allChecked}`);
+        console.log(`Payment button state updated based on checkboxes. Enabled: ${allChecked}`);
     };
 
     // --- Form Submission & Navigation Logic ---
-    const submitToNetlify = async (triggeringButton) => { /* ... same V2.11 logic ... */ if (!SUBMIT_DATA_TO_NETLIFY) { console.warn("!!! Netlify submission bypassed. Returning true."); return true; } console.log("Attempting Netlify submission..."); let success = false; hideFormMessage(formMessage); /* Hide general message */ setButtonLoading(triggeringButton, true, "Submitting..."); showElement(loaderOverlay); addClass(loaderOverlay, 'visible'); if(loaderText) loaderText.textContent = "Submitting Request..."; const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), NETLIFY_SUBMIT_TIMEOUT); try { const formData = new FormData(bookingForm); const formName = bookingForm.getAttribute('name'); if (!formData.has('form-name') && formName) { formData.append('form-name', formName); } formSteps[PAYMENT_STEP_INDEX]?.querySelectorAll('input[type="checkbox"][required]').forEach(cb => {formData.append(cb.name, cb.checked);}); const formBody = new URLSearchParams(formData).toString(); console.log("Submitting to Netlify:", formBody); const response = await fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: formBody, signal: controller.signal }); clearTimeout(timeoutId); if (response.ok) { console.log("Netlify submission successful."); success = true; } else { const errorText = await response.text(); console.error(`Netlify submission failed: Status ${response.status}`, errorText); showFormMessage(`Submission failed (Check Console). Please try again or contact us.`, "error", formMessage); success = false; } } catch (error) { clearTimeout(timeoutId); console.error("Error during Netlify submission fetch:", error); if (error.name === 'AbortError') { showFormMessage("Submission timed out. Check connection.", "error", formMessage); } else { showFormMessage("Network error during submission. Please try again.", "error", formMessage); } success = false; } finally { console.log("Netlify submission attempt finished."); removeClass(loaderOverlay, 'visible'); await new Promise(resolve => setTimeout(resolve, CSS_TRANSITION_DURATION)); hideElement(loaderOverlay); setButtonLoading(triggeringButton, false); console.log(`submitToNetlify returning: ${success}`); return success; }};
-    const handleFullFormValidation = (lastStepToIndex) => { /* ... same logic V2.11 - uses updated validateStep ... */ console.log(`--- Running full validation up to step index ${lastStepToIndex} ---`); let isAllValid = true; for (let i = 0; i <= lastStepToIndex; i++) { if (!validateStep(i, false)) { isAllValid = false; console.log(`Full validation failed on step ${i + 1}`); if (currentStepIndex !== i) { console.log(`Navigating back to failed step ${i+1}`); navigateToStep(i, false); } setTimeout(() => { showFormMessage("Please correct the errors highlighted above.", "error"); const firstError = formSteps[i]?.querySelector('.input-error'); if (firstError) { console.log(`Scrolling to first error in step ${i+1}:`, firstError); firstError.focus({preventScroll: true}); scrollIntoViewIfNeeded(firstError.closest('.input-group') || firstError); } }, currentStepIndex !== i ? CSS_TRANSITION_DURATION + 50 : 0); break; } } console.log(`--- Full validation result up to step ${lastStepToIndex + 1}: ${isAllValid} ---`); return isAllValid; };
+    const submitToNetlify = async (triggeringButton) => { /* ... same V2.11 logic ... */ if (!SUBMIT_DATA_TO_NETLIFY) { console.warn("!!! Netlify submission bypassed. Returning true."); return true; } console.log("Attempting Netlify submission..."); let success = false; hideFormMessage(formMessage); setButtonLoading(triggeringButton, true, "Submitting..."); showElement(loaderOverlay); addClass(loaderOverlay, 'visible'); if(loaderText) loaderText.textContent = "Submitting Request..."; const controller = new AbortController(); const timeoutId = setTimeout(() => controller.abort(), NETLIFY_SUBMIT_TIMEOUT); try { const formData = new FormData(bookingForm); const formName = bookingForm.getAttribute('name'); if (!formData.has('form-name') && formName) { formData.append('form-name', formName); } formSteps[PAYMENT_STEP_INDEX]?.querySelectorAll('input[type="checkbox"][required]').forEach(cb => {formData.append(cb.name, cb.checked);}); const formBody = new URLSearchParams(formData).toString(); console.log("Submitting to Netlify:", formBody); const response = await fetch("/", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: formBody, signal: controller.signal }); clearTimeout(timeoutId); if (response.ok) { console.log("Netlify submission successful."); success = true; } else { const errorText = await response.text(); console.error(`Netlify submission failed: Status ${response.status}`, errorText); showFormMessage(`Submission failed (Check Console). Please try again or contact us.`, "error", formMessage); success = false; } } catch (error) { clearTimeout(timeoutId); console.error("Error during Netlify submission fetch:", error); if (error.name === 'AbortError') { showFormMessage("Submission timed out. Check connection.", "error", formMessage); } else { showFormMessage("Network error during submission. Please try again.", "error", formMessage); } success = false; } finally { console.log("Netlify submission attempt finished."); removeClass(loaderOverlay, 'visible'); await new Promise(resolve => setTimeout(resolve, CSS_TRANSITION_DURATION)); hideElement(loaderOverlay); setButtonLoading(triggeringButton, false); console.log(`submitToNetlify returning: ${success}`); return success; }};
+    // handleFullFormValidation: Validates steps UP TO a certain index, shows errors
+    const handleFullFormValidation = (lastStepToIndex) => { console.log(`--- Running full validation up to step index ${lastStepToIndex}, showing errors ---`); let isAllValid = true; for (let i = 0; i <= lastStepToIndex; i++) { if (!validateStep(i, true)) { isAllValid = false; console.log(`Full validation failed on step ${i + 1}`); if (currentStepIndex !== i) { console.log(`Navigating back to failed step ${i+1}`); navigateToStep(i, false); } setTimeout(() => { showFormMessage("Please correct the errors highlighted above.", "error"); const firstError = formSteps[i]?.querySelector('.input-error'); if (firstError) { console.log(`Scrolling to first error in step ${i+1}:`, firstError); firstError.focus({preventScroll: true}); scrollIntoViewIfNeeded(firstError.closest('.input-group') || firstError); } }, currentStepIndex !== i ? CSS_TRANSITION_DURATION + 50 : 0); break; } } console.log(`--- Full validation result up to step ${lastStepToIndex + 1}: ${isAllValid} ---`); return isAllValid; };
     const initiateRedirect = () => { /* ... same logic V2.11 ... */ console.log("--- initiateRedirect called ---"); const stripeLink = paymentButton?.dataset.stripeLink; if (!stripeLink || stripeLink === '#') { console.error("Stripe link is missing or invalid for the payment button. Value:", stripeLink); showFormMessage("Payment link is currently unavailable. Please contact us.", "error", finalStepErrorMessage); scrollIntoViewIfNeeded(finalStepErrorMessage); setButtonLoading(paymentButton, false); return; } console.log("Checkboxes validated. Redirecting to Stripe:", stripeLink); setButtonLoading(paymentButton, true, "Redirecting..."); showElement(loaderOverlay); addClass(loaderOverlay, 'visible'); if(loaderText) loaderText.textContent = "Redirecting to Secure Payment..."; setTimeout(() => { window.location.href = stripeLink; }, 150); };
 
     // --- Event Listeners ---
-    nextButton?.addEventListener('click', () => { /* ... same V2.11, calls validateStep ... */ console.log("Next button clicked."); hideFormMessage(); if (validateStep(currentStepIndex, true)) { formAttemptedSubmit = true; navigateToStep(currentStepIndex + 1, true); } else { console.warn(`Next button: Validation failed for step ${currentStepIndex + 1}`); showFormMessage("Please correct the errors highlighted above.", "error"); const firstError = formSteps[currentStepIndex]?.querySelector('.input-error'); if (firstError) { firstError.focus({preventScroll: true}); scrollIntoViewIfNeeded(firstError.closest('.input-group') || firstError); } } });
+    // Next Button: Validates CURRENT step, shows errors, then navigates
+    nextButton?.addEventListener('click', () => { console.log("Next button clicked."); hideFormMessage(); if (validateStep(currentStepIndex, true)) { formAttemptedSubmit = true; navigateToStep(currentStepIndex + 1, true); } else { console.warn(`Next button: Validation failed for step ${currentStepIndex + 1}`); showFormMessage("Please correct the errors highlighted above.", "error"); const firstError = formSteps[currentStepIndex]?.querySelector('.input-error'); if (firstError) { firstError.focus({preventScroll: true}); scrollIntoViewIfNeeded(firstError.closest('.input-group') || firstError); } } });
+    // Prev Button: Just navigates
     prevButton?.addEventListener('click', () => { console.log("Prev button clicked."); hideFormMessage(); hideFormMessage(finalStepErrorMessage); navigateToStep(currentStepIndex - 1, false); });
+    // Edit Link: Just navigates
     bookingForm.addEventListener('click', (e) => { /* ... same V2.11 ... */ const target = e.target.closest('.summary-edit-link'); if (target && target.dataset.targetStep && (currentStepIndex === PENULTIMATE_VISIBLE_STEP_INDEX || currentStepIndex === PAYMENT_STEP_INDEX)) { const targetStepIndex = parseInt(target.dataset.targetStep, 10) - 1; if (!isNaN(targetStepIndex) && targetStepIndex < currentStepIndex) { console.log(`Edit link clicked, navigating to step ${targetStepIndex + 1}`); hideFormMessage(); hideFormMessage(finalStepErrorMessage); navigateToStep(targetStepIndex, false); } } });
 
-    // Proceed to Disclaimers Button Click (Step BEFORE payment step on 6-step form)
-    // *** UPDATED: Removed submit call, validates without showing errors first ***
-     proceedToDisclaimersButton?.addEventListener('click', async () => {
+    // Proceed Button (Step BEFORE final on 6-step forms ONLY)
+    proceedToDisclaimersButton?.addEventListener('click', async () => {
          console.log("Proceed to Disclaimers button clicked.");
          if (!HAS_SEPARATE_DISCLAIMER_STEP || currentStepIndex !== PENULTIMATE_VISIBLE_STEP_INDEX) { console.warn("Proceed button clicked on wrong step/form type."); return; }
-         formAttemptedSubmit = true; // Mark that user tried to proceed
-
-         // Validate steps 0-4, show errors if they fail
+         formAttemptedSubmit = true;
+         // Validate ALL previous steps, SHOW errors if invalid
          if (!handleFullFormValidation(PENULTIMATE_VISIBLE_STEP_INDEX)) {
              return; // Stop if validation fails
          }
          console.log("Proceed button: Validation passed. Navigating...");
-         // Only navigate if valid, NO submission here
-         navigateToStep(PAYMENT_STEP_INDEX, true); // Navigate to Step 6 (index 5)
+         // Navigate to final step - NO SUBMISSION HERE
+         navigateToStep(PAYMENT_STEP_INDEX, true);
      });
 
-     // Final Payment Button Click (On PAYMENT_STEP_INDEX for EITHER 5 or 6 steps)
-     // *** UPDATED: Validate checkboxes first (showing errors), then previous steps, then submit ***
+     // Final Payment Button (Final Step on ALL forms)
      paymentButton?.addEventListener('click', async () => {
          console.log("Final Payment button clicked.");
          if (currentStepIndex !== PAYMENT_STEP_INDEX) { console.warn("Payment button clicked on wrong step."); return; }
-
          formAttemptedSubmit = true; // Mark final attempt
          setButtonLoading(paymentButton, true, "Checking...");
          hideFormMessage(finalStepErrorMessage); // Clear previous final step errors
 
-         // 1. Validate THIS step's checkboxes first, SHOW errors if invalid
+         // 1. Validate THIS step's checkboxes, SHOW errors if invalid
          let checkboxesValid = true;
          const finalStepCheckboxes = formSteps[PAYMENT_STEP_INDEX]?.querySelectorAll('input[type="checkbox"][required]');
          if (finalStepCheckboxes && finalStepCheckboxes.length > 0) {
             finalStepCheckboxes.forEach(cb => {
-                 // Show error UI if invalid
-                 if (!validateField(cb, false)) { checkboxesValid = false; }
+                 // Use validateField to check logic, use showFieldError to display UI error if needed
+                 if (!validateField(cb)) {
+                     checkboxesValid = false;
+                     showFieldError(cb); // Explicitly show UI error on submit attempt
+                 } else {
+                    clearFieldError(cb); // Clear error if it was previously shown but now checked
+                 }
              });
          }
 
@@ -185,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
          }
          console.log("Payment button: Full form validation passed.");
 
-         // 3. Submit data to Netlify (if enabled)
+         // 3. If ALL validation passes, SUBMIT data to Netlify (if enabled)
          setButtonLoading(paymentButton, true, "Submitting..."); // Update loading text
          const submissionSuccess = await submitToNetlify(paymentButton);
 
@@ -197,37 +191,47 @@ document.addEventListener('DOMContentLoaded', () => {
          } else {
              // Submission failed, error message shown by submitToNetlify
              console.error("Payment button: Submission failed. Redirect aborted.");
-             setButtonLoading(paymentButton, false); // Restore button state on failure
+             // Button loading state reset within submitToNetlify's finally block
              scrollIntoViewIfNeeded(formMessage); // Ensure general error msg is visible
          }
      });
 
-    // Prevent Enter Key Submission (Same as V2.11)
-     bookingForm.addEventListener('keydown', (e) => { /* ... same logic ... */ if (e.key === 'Enter') { const targetElement = e.target; if (targetElement.tagName === 'TEXTAREA') { return; } e.preventDefault(); if (!isAnimating) { console.log(`Enter key pressed on step index ${currentStepIndex}. Triggering action...`); const buttonToClick = (currentStepIndex < PENULTIMATE_VISIBLE_STEP_INDEX) ? nextButton : (currentStepIndex === PENULTIMATE_VISIBLE_STEP_INDEX && HAS_SEPARATE_DISCLAIMER_STEP) ? proceedToDisclaimersButton : paymentButton; buttonToClick?.click(); } } });
+    // Enter Key Handling
+    bookingForm.addEventListener('keydown', (e) => { /* ... same V2.13 ... */ if (e.key === 'Enter') { const targetElement = e.target; if (targetElement.tagName === 'TEXTAREA') { return; } e.preventDefault(); if (!isTransitioning) { console.log(`Enter key pressed on step index ${currentStepIndex}. Triggering action...`); const buttonToClick = (currentStepIndex < PENULTIMATE_VISIBLE_STEP_INDEX) ? nextButton : (currentStepIndex === PENULTIMATE_VISIBLE_STEP_INDEX && HAS_SEPARATE_DISCLAIMER_STEP) ? proceedToDisclaimersButton : paymentButton; buttonToClick?.click(); } } });
 
-    // *** UPDATED: setupRealtimeValidation - Only update button state on checkbox change ***
+    // Realtime Validation Setup
     const setupRealtimeValidation = () => {
-         console.log("Setting up realtime validation listeners...");
-         // Validate standard fields on blur only AFTER first attempt to proceed past review OR if already has error
-         bookingForm?.querySelectorAll('input:not([type=checkbox]), select, textarea').forEach(field => {
-             field.addEventListener('blur', () => { if (formAttemptedSubmit || hasClass(field, 'input-error')) { validateField(field); } }); // Validate logic only
-             // Clear errors instantly on interaction for better UX
+        console.log("Setting up realtime validation listeners...");
+        // Validate standard fields on blur AFTER first submit attempt or if field already has error
+        bookingForm?.querySelectorAll('input:not([type=checkbox]), select, textarea').forEach(field => {
+            field.addEventListener('blur', () => {
+                // Only show error UI on blur if user tried proceeding OR field already had error
+                if (formAttemptedSubmit || hasClass(field, 'input-error')) {
+                    if (!validateField(field)) { // Check validity
+                        showFieldError(field);    // Show error if invalid
+                    } else {
+                        clearFieldError(field);   // Clear if valid
+                    }
+                }
+            });
+            // Clear errors instantly on input/change for better UX
              const eventType = (field.tagName === 'SELECT' || ['date', 'time', 'number'].includes(field.type)) ? 'change' : 'input';
              field.addEventListener(eventType, () => { if (hasClass(field, 'input-error')) { clearFieldError(field); } });
-         });
-         // Checkboxes in the FINAL step control the payment button's enabled state via change event
-         const finalStepCheckboxes = formSteps[PAYMENT_STEP_INDEX]?.querySelectorAll('input[type="checkbox"][required]');
-         if (finalStepCheckboxes && finalStepCheckboxes.length > 0) {
-             finalStepCheckboxes.forEach(cb => {
-                 cb.addEventListener('change', () => {
-                     console.log(`Checkbox ${cb.name || cb.id} changed on final step.`);
-                     updatePaymentButtonState(); // ONLY check state and toggle button
-                     clearFieldError(cb); // Clear specific checkbox error on change
-                 });
-             });
-             console.log(`Attached change listeners to ${finalStepCheckboxes.length} checkboxes in final step.`);
-         } else { console.log("No required checkboxes found in the final step to attach listeners to."); }
-         console.log("Realtime validation setup complete.");
+        });
+        // Checkboxes in the FINAL step ONLY update the payment button state on change
+        const finalStepCheckboxes = formSteps[PAYMENT_STEP_INDEX]?.querySelectorAll('input[type="checkbox"][required]');
+        if (finalStepCheckboxes && finalStepCheckboxes.length > 0) {
+            finalStepCheckboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    console.log(`Checkbox ${cb.name || cb.id} changed on final step.`);
+                    updatePaymentButtonState(); // ONLY check state and toggle button
+                    // Clear visual error for this specific checkbox if it's now checked
+                    if(cb.checked) { clearFieldError(cb); }
+                });
+            });
+            console.log(`Attached change listeners to ${finalStepCheckboxes.length} checkboxes in final step.`);
+        } else { console.log("No required checkboxes found in the final step to attach listeners to."); }
+        console.log("Realtime validation setup complete.");
     };
 
     // --- Scroll-to-Top Logic --- (Same)
@@ -241,5 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Run Initialization ---
     initializeBookingForm();
+
+    // --- Expose initMapAutocomplete globally ---
+    window.initMapAutocomplete = initMapAutocomplete;
 
 }); // End DOMContentLoaded
