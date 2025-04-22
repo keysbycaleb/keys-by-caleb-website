@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let accumulatedDeltaY = 0;
 
     // --- Configuration ---
-    const wheelScrollEndDelay = 200;
+    const wheelScrollEndDelay = 40;
     const sectionScrollDuration = 0.7;
     const sectionScrollEase = 'power2.inOut';
     const linkScrollDuration = 1.0; // Duration for link clicks
