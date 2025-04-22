@@ -1,13 +1,13 @@
 /**
- * Main JavaScript for Keys by Caleb Website (V47 - Threshold Scroll Trigger)
+ * Main JavaScript for Keys by Caleb Website (V49 - Smoother Scroll Animation)
  * Handles scroll-to-top, active nav highlighting, GSAP smooth scroll (links),
  * contact form (default HTML handling), tsParticles hero animation (Float Effect), footer copyright year.
  * Implements JS-driven section scrolling for Wheel/Trackpad and Keyboard on desktop.
- * **Changed wheel logic to trigger scroll when delta threshold is met, not on scroll end.**
+ * **Changed scroll ease to expo.out and reset accumulator immediately on trigger.**
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb NEW JS Initialized (V47 - Threshold Scroll Trigger).");
+    console.log("Keys by Caleb NEW JS Initialized (V49 - Smoother Scroll Animation).");
 
     // --- GSAP Plugin Registration ---
     if (typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined') {
@@ -20,14 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- State Variables ---
     let isAnimating = false;
-    // let wheelTimeout; // No longer needed for scroll end detection
     let accumulatedDeltaY = 0;
 
     // --- Configuration ---
     const WHEEL_SCROLL_THRESHOLD = 150; // Pixels: Trigger animation after accumulating this much deltaY (Adjust sensitivity here)
     console.log(`WHEEL_SCROLL_THRESHOLD set to: ${WHEEL_SCROLL_THRESHOLD}`);
-    const sectionScrollDuration = 0.7;
-    const sectionScrollEase = 'power2.inOut';
+    const sectionScrollDuration = 0.8; // Slightly increased duration for smoother ease
+    const sectionScrollEase = 'expo.out'; // Changed ease for potentially smoother feel
+    console.log(`sectionScrollEase set to: ${sectionScrollEase}`);
     const linkScrollDuration = 1.0; // Duration for link clicks
     const linkScrollEase = 'power2.inOut'; // Ease for link clicks (can differ from wheel/key)
     const headerOffsetFactor = 0.05;
@@ -67,18 +67,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Animate scroll with GSAP (Wrapper function used by all programmatic scrolls)
     const animateScroll = (target, duration, params) => {
-        const now = performance.now().toFixed(2);
-        // console.log(`%c[${now}ms] AnimateScroll START: Target:`, 'color: blue; font-weight: bold;', target, `Duration: ${duration}s, ScrollTo Y: ${params?.scrollTo?.y?.toFixed(0)}, Ease: ${params.ease || 'default'}`);
+        // Use the ease provided in params, or default to the globally defined sectionScrollEase
+        const ease = params.ease || sectionScrollEase;
+        // console.log(`AnimateScroll START - Target Y: ${params?.scrollTo?.y?.toFixed(0)}, Duration: ${duration}s, Ease: ${ease}`);
+
         if (isAnimating) {
-            console.warn(`%c[${now}ms] AnimateScroll BLOCKED - animation already in progress.`, 'color: orange;');
+            // console.warn(`AnimateScroll BLOCKED - animation already in progress.`);
             return;
         }
         isAnimating = true;
-        // console.log(`%c[${now}ms] AnimateScroll: Setting isAnimating = true`, 'color: blue;'); // More specific log
 
-        // We remove listeners temporarily to prevent interference during animation
+        // Remove listeners temporarily
         if (isDesktopJsScrollActive()) {
-             // console.log(`%c[${now}ms] AnimateScroll: Removing wheel/keydown listeners.`, 'color: blue;');
              scrollSnapContainer?.removeEventListener('wheel', handleWheel);
              window.removeEventListener('keydown', handleKeyDown);
         }
@@ -86,37 +86,29 @@ document.addEventListener('DOMContentLoaded', () => {
         gsap.to(target, {
             duration: duration,
             scrollTo: params.scrollTo,
-            ease: params.ease || "power2.inOut", // Default ease used if none provided
+            ease: ease, // Use determined ease
             overwrite: 'auto',
             onComplete: () => {
-                const completeTime = performance.now().toFixed(2);
-                // console.log(`%c[${completeTime}ms] AnimateScroll COMPLETE. Setting isAnimating = false.`, 'color: green; font-weight: bold;');
+                // console.log(`AnimateScroll COMPLETE. Setting isAnimating = false.`);
                 isAnimating = false;
                 // Reset accumulator only AFTER animation completes successfully
-                accumulatedDeltaY = 0;
-                // console.log(`%c[${completeTime}ms] AnimateScroll Complete: Reset accumulatedDeltaY.`, 'color: green;');
+                // accumulatedDeltaY = 0; // Keep reset here for safety after completion
                 // Re-attach listeners after a short delay
                 if (isDesktopJsScrollActive()) {
-                    // console.log(`%c[${completeTime}ms] AnimateScroll Complete: Re-attaching wheel/keydown listeners after timeout.`, 'color: green;');
                     setTimeout(() => {
-                        // const reattachTime = performance.now().toFixed(2);
-                        // console.log(`%c[${reattachTime}ms] Re-attaching listeners now.`, 'color: green;');
                         scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
                         window.addEventListener('keydown', handleKeyDown);
-                    }, 50); // Shortened delay for re-attaching
+                    }, 50);
                 }
                 params.onComplete?.();
             },
             onInterrupt: () => {
-                const interruptTime = performance.now().toFixed(2);
-                console.error(`%c[${interruptTime}ms] >>> GSAP AnimateScroll INTERRUPTED. Setting isAnimating = false.`, 'color: red; font-weight: bold;');
+                // console.error(`>>> GSAP AnimateScroll INTERRUPTED. Setting isAnimating = false.`);
                 isAnimating = false;
                 // Reset accumulator on interrupt too
                 accumulatedDeltaY = 0;
-                // console.log(`%c[${interruptTime}ms] AnimateScroll Interrupt: Reset accumulatedDeltaY.`, 'color: red;');
                  // Re-attach listeners immediately on interrupt
                  if (isDesktopJsScrollActive()) {
-                     // console.log(`%c[${interruptTime}ms] AnimateScroll Interrupt: Re-attaching wheel/keydown listeners immediately.`, 'color: red;');
                      scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
                      window.addEventListener('keydown', handleKeyDown);
                  }
@@ -143,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  const scrollTarget = getScrollTarget();
                  const desktopScroll = isDesktopJsScrollActive();
                  let targetScrollY = desktopScroll ? calculateConsistentTargetY(targetElement) : Math.max(0, targetElement.offsetTop - getHeaderHeight());
+                 // Use specific link ease for links
                  animateScroll(scrollTarget, linkScrollDuration, { scrollTo: { y: targetScrollY }, ease: linkScrollEase });
              }
         });
@@ -152,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Scroll-to-Top Button Click (Uses animateScroll wrapper)
     scrollToTopButton?.addEventListener('click', () => {
         const scrollTarget = getScrollTarget();
+        // Use link ease for scroll-to-top as well
         animateScroll(scrollTarget, linkScrollDuration, { scrollTo: 0, ease: linkScrollEase });
      });
 
@@ -159,14 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleActiveNav = () => { /* ... same logic ... */ let currentSectionId = 'hero'; const headerHeight = getHeaderHeight(); const scrollTarget = getScrollTarget(); const scrollPosition = (scrollTarget === window) ? window.scrollY : scrollTarget.scrollTop; const scrollTargetElement = (scrollTarget === window) ? document.documentElement : scrollTarget; if (!scrollTargetElement) return; const viewportHeight = scrollTargetElement.clientHeight || window.innerHeight; const scrollHeight = scrollTargetElement.scrollHeight || document.body.scrollHeight; let bestMatch = { id: 'hero', distance: Infinity }; allNavTargets.forEach((section) => { const activationPoint = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - activationPoint); if (scrollPosition >= activationPoint - viewportHeight * 0.7 && scrollPosition < activationPoint + viewportHeight * 0.3) { if (distance < bestMatch.distance) { bestMatch = { id: section.id, distance: distance }; } } else { const idealAlignmentPoint = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - idealAlignmentPoint); if (distance < bestMatch.distance) { bestMatch = { id: section.id, distance: distance }; } } }); currentSectionId = bestMatch.id; if (scrollPosition + viewportHeight >= scrollHeight - 50) { const lastElement = allNavTargets[allNavTargets.length - 1]; if (lastElement && lastElement.id) { currentSectionId = lastElement.id; if (currentSectionId === 'main-footer') currentSectionId = 'contact'; } } else if (scrollPosition < headerHeight * 0.5) { currentSectionId = 'hero'; } headerNavLinks.forEach(link => { link.classList.remove('active'); const linkHref = link.getAttribute('href'); if (linkHref === `#${currentSectionId}`) { link.classList.add('active'); } }); };
 
 
-    // --- JS Wheel & Keyboard Navigation Logic ---
-
-    // ** REMOVED handleWheelScrollEnd function entirely **
+    // --- JS Wheel & Keyboard Navigation Logic --- (Threshold Trigger V2)
 
     // ** MODIFIED handleWheel function **
     const handleWheel = (event) => {
         if (!isDesktopJsScrollActive()) return;
-        const now = performance.now().toFixed(2);
+        // const now = performance.now().toFixed(2);
 
         // Prevent default scroll behavior if we are handling it via JS
         event.preventDefault();
@@ -193,18 +185,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     const targetSection = allNavTargets[targetIndex];
                     if (targetSection && targetSection.id) {
                         const targetScrollY = calculateConsistentTargetY(targetSection);
-                         console.log(`%c[${now}ms] handleWheel: Animating to Section: ${targetSection.id} (Y: ${targetScrollY.toFixed(0)})`, 'color: purple; font-weight: bold;');
-                        // Call animateScroll, it will set isAnimating=true and handle listeners
-                        animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY }, ease: sectionScrollEase });
-                        // Reset accumulator immediately after triggering animation
-                        // accumulatedDeltaY = 0; // Moved reset to onComplete/onInterrupt
+                        // console.log(`%c[${now}ms] handleWheel: Animating to Section: ${targetSection.id} (Y: ${targetScrollY.toFixed(0)})`, 'color: purple; font-weight: bold;');
+
+                        // *** RESET ACCUMULATOR IMMEDIATELY ***
+                        accumulatedDeltaY = 0;
+                        // console.log(`%c[${now}ms] handleWheel: Reset accumulator BEFORE starting animation.`, 'color: purple;');
+
+                        // Call animateScroll, using the section-specific duration and ease
+                        animateScroll(scrollSnapContainer, sectionScrollDuration, {
+                            scrollTo: { y: targetScrollY }
+                            // Ease is now handled within animateScroll using sectionScrollEase by default
+                        });
                     }
                 } else {
-                    // If target is the same, reset accumulator to prevent immediate re-triggering if user slightly reverses scroll
-                    accumulatedDeltaY = 0;
+                    // If target is the same, maybe don't need to reset here?
+                    // Resetting prevents buildup if scrolling against boundary.
+                     accumulatedDeltaY = 0;
                 }
             }
-            // No timeout logic needed here anymore
         }
     };
 
@@ -235,7 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetSection = allNavTargets[targetIndex];
             if (targetSection && targetSection.id) {
                 const targetScrollY = calculateConsistentTargetY(targetSection);
-                animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY }, ease: sectionScrollEase });
+                // Use section ease for keyboard nav too
+                animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY } });
             }
         }
     };
@@ -264,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const debouncedScrollToTopHandler = debounce(handleScrollToTopVisibility, 50);
     const setupScrollListeners = () => {
         const currentScrollTarget = getScrollTarget();
-        // console.log(`%c[${performance.now().toFixed(2)}ms] setupScrollListeners: Setting up for ${currentScrollTarget === window ? 'window' : 'container'}`, 'color: teal');
         // Remove potentially old listeners first
         window.removeEventListener('scroll', debouncedNavHandler);
         window.removeEventListener('scroll', debouncedScrollToTopHandler);
@@ -274,12 +272,10 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollSnapContainer?.removeEventListener('wheel', handleWheel);
         // Add appropriate listeners
         if (currentScrollTarget === window) {
-            // console.log(`%c[${performance.now().toFixed(2)}ms] setupScrollListeners: Adding listeners to window`, 'color: teal');
             window.addEventListener('scroll', debouncedNavHandler, { passive: true });
             window.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true });
             window.addEventListener('keydown', handleKeyDown);
         } else {
-            // console.log(`%c[${performance.now().toFixed(2)}ms] setupScrollListeners: Adding listeners to scrollSnapContainer & window(keydown)`, 'color: teal');
             scrollSnapContainer.addEventListener('scroll', debouncedNavHandler, { passive: true });
             scrollSnapContainer.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true });
             scrollSnapContainer.addEventListener('wheel', handleWheel, { passive: false });
@@ -290,7 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
     handleScrollToTopVisibility();
     setTimeout(handleActiveNav, 150); // Initial nav check
     window.addEventListener('resize', debounce(() => {
-         // console.log(`%c[${performance.now().toFixed(2)}ms] Window resized. Re-running setupScrollListeners.`, 'color: orange;');
          setupScrollListeners();
          handleActiveNav();
          handleScrollToTopVisibility();
