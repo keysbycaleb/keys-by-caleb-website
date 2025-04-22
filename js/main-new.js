@@ -1,13 +1,13 @@
 /**
- * Main JavaScript for Keys by Caleb Website (V50 - Overwrite True & Immediate Re-attach)
+ * Main JavaScript for Keys by Caleb Website (V44 Base - Scroll End Detection)
  * Handles scroll-to-top, active nav highlighting, GSAP smooth scroll (links),
  * contact form (default HTML handling), tsParticles hero animation (Float Effect), footer copyright year.
- * Implements JS-driven section scrolling for Wheel/Trackpad and Keyboard on desktop.
- * **Changed GSAP overwrite to true and removed listener re-attach delay on complete.**
+ * Implements JS-driven section scrolling for Wheel/Trackpad and Keyboard on desktop using scroll end detection.
+ * **Reverted to wheelScrollEndDelay logic.**
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb NEW JS Initialized (V50 - Overwrite True & Immediate Re-attach).");
+    console.log("Keys by Caleb NEW JS Initialized (V44 Base - Scroll End Detection).");
 
     // --- GSAP Plugin Registration ---
     if (typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined') {
@@ -20,16 +20,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- State Variables ---
     let isAnimating = false;
+    let wheelTimeout;
     let accumulatedDeltaY = 0;
 
     // --- Configuration ---
-    const WHEEL_SCROLL_THRESHOLD = 150; // Pixels: Trigger animation after accumulating this much deltaY (Adjust sensitivity here)
-    console.log(`WHEEL_SCROLL_THRESHOLD set to: ${WHEEL_SCROLL_THRESHOLD}`);
-    const sectionScrollDuration = 0.8; // Slightly increased duration for smoother ease
-    const sectionScrollEase = 'expo.out'; // Changed ease for potentially smoother feel
-    console.log(`sectionScrollEase set to: ${sectionScrollEase}`);
+    const wheelScrollEndDelay = 200; // Original delay value
+    console.log(`wheelScrollEndDelay set to: ${wheelScrollEndDelay}ms`);
+    const sectionScrollDuration = 0.7;
+    const sectionScrollEase = 'power2.inOut'; // Original ease
     const linkScrollDuration = 1.0; // Duration for link clicks
-    const linkScrollEase = 'power2.inOut'; // Ease for link clicks (can differ from wheel/key)
+    const linkScrollEase = 'power2.inOut'; // Ease for link clicks
     const headerOffsetFactor = 0.05;
 
     // --- Cache Elements ---
@@ -69,9 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const animateScroll = (target, duration, params) => {
         const ease = params.ease || sectionScrollEase; // Default to section ease
         // console.log(`AnimateScroll START - Y: ${params?.scrollTo?.y?.toFixed(0)}, Ease: ${ease}`);
-
         if (isAnimating) {
-             // console.warn(`AnimateScroll BLOCKED - animation already in progress.`);
+             // console.warn("AnimateScroll BLOCKED - already animating.");
              return;
         }
         isAnimating = true;
@@ -86,27 +85,26 @@ document.addEventListener('DOMContentLoaded', () => {
             duration: duration,
             scrollTo: params.scrollTo,
             ease: ease,
-            overwrite: true, // *** CHANGED TO true ***
+            overwrite: 'auto', // Use 'auto' for this logic
             onComplete: () => {
-                // console.log(`AnimateScroll COMPLETE. Setting isAnimating = false.`);
+                // console.log("AnimateScroll COMPLETE.");
                 isAnimating = false;
                 accumulatedDeltaY = 0; // Reset accumulator
-                // Re-attach listeners IMMEDIATELY on complete
+                // Re-attach listeners after delay (original V44 approach)
                 if (isDesktopJsScrollActive()) {
-                    // console.log("Re-attaching listeners onComplete.");
-                    scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
-                    window.addEventListener('keydown', handleKeyDown);
-                    // *** REMOVED setTimeout ***
+                    setTimeout(() => {
+                        scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
+                        window.addEventListener('keydown', handleKeyDown);
+                    }, 100); // Original delay
                 }
                 params.onComplete?.();
             },
             onInterrupt: () => {
-                // console.error(`>>> GSAP AnimateScroll INTERRUPTED. Setting isAnimating = false.`);
+                // console.error(">>> GSAP AnimateScroll INTERRUPTED.");
                 isAnimating = false;
                 accumulatedDeltaY = 0; // Reset accumulator
-                 // Re-attach listeners immediately on interrupt
+                 // Re-attach listeners immediately
                  if (isDesktopJsScrollActive()) {
-                     // console.log("Re-attaching listeners onInterrupt.");
                      scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
                      window.addEventListener('keydown', handleKeyDown);
                  }
@@ -151,55 +149,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleActiveNav = () => { /* ... same logic ... */ let currentSectionId = 'hero'; const headerHeight = getHeaderHeight(); const scrollTarget = getScrollTarget(); const scrollPosition = (scrollTarget === window) ? window.scrollY : scrollTarget.scrollTop; const scrollTargetElement = (scrollTarget === window) ? document.documentElement : scrollTarget; if (!scrollTargetElement) return; const viewportHeight = scrollTargetElement.clientHeight || window.innerHeight; const scrollHeight = scrollTargetElement.scrollHeight || document.body.scrollHeight; let bestMatch = { id: 'hero', distance: Infinity }; allNavTargets.forEach((section) => { const activationPoint = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - activationPoint); if (scrollPosition >= activationPoint - viewportHeight * 0.7 && scrollPosition < activationPoint + viewportHeight * 0.3) { if (distance < bestMatch.distance) { bestMatch = { id: section.id, distance: distance }; } } else { const idealAlignmentPoint = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - idealAlignmentPoint); if (distance < bestMatch.distance) { bestMatch = { id: section.id, distance: distance }; } } }); currentSectionId = bestMatch.id; if (scrollPosition + viewportHeight >= scrollHeight - 50) { const lastElement = allNavTargets[allNavTargets.length - 1]; if (lastElement && lastElement.id) { currentSectionId = lastElement.id; if (currentSectionId === 'main-footer') currentSectionId = 'contact'; } } else if (scrollPosition < headerHeight * 0.5) { currentSectionId = 'hero'; } headerNavLinks.forEach(link => { link.classList.remove('active'); const linkHref = link.getAttribute('href'); if (linkHref === `#${currentSectionId}`) { link.classList.add('active'); } }); };
 
 
-    // --- JS Wheel & Keyboard Navigation Logic --- (Threshold Trigger V2)
+    // --- JS Wheel & Keyboard Navigation Logic --- (Scroll End Detection)
 
-    // ** MODIFIED handleWheel function **
+    // Function called after wheel timeout
+    const handleWheelScrollEnd = () => {
+        if (isAnimating) {
+            accumulatedDeltaY = 0; return;
+        }
+        const direction = accumulatedDeltaY > 0 ? 1 : -1;
+        accumulatedDeltaY = 0; // Reset accumulator
+
+        const currentIndex = getCurrentSectionIndex();
+        let targetIndex = currentIndex + direction;
+        targetIndex = Math.max(0, Math.min(targetIndex, allNavTargets.length - 1));
+
+        if (targetIndex !== currentIndex) {
+            const targetSection = allNavTargets[targetIndex];
+            if (targetSection && targetSection.id) {
+                const targetScrollY = calculateConsistentTargetY(targetSection);
+                animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY } });
+            }
+        }
+    };
+
+    // Handles wheel events, sets timeout
     const handleWheel = (event) => {
         if (!isDesktopJsScrollActive()) return;
-        // const now = performance.now().toFixed(2);
-
-        // Prevent default scroll behavior if we are handling it via JS
-        event.preventDefault();
-
-        if (isAnimating) {
-             // console.log(`%c[${now}ms] handleWheel: Ignoring deltaY=${event.deltaY.toFixed(0)} during animation.`, 'color: #999;');
-             return; // Do nothing if an animation is already in progress
-        }
 
         if (Math.abs(event.deltaY) > 0) {
-            // console.log(`%c[${now}ms] handleWheel: deltaY=${event.deltaY.toFixed(0)}, accumulatedDeltaY=${accumulatedDeltaY.toFixed(0)}`, 'color: #666;');
-            accumulatedDeltaY += event.deltaY;
-
-            // Check if accumulated delta crosses the threshold
-            if (Math.abs(accumulatedDeltaY) >= WHEEL_SCROLL_THRESHOLD) {
-                const direction = accumulatedDeltaY > 0 ? 1 : -1;
-                const currentIndex = getCurrentSectionIndex();
-                let targetIndex = currentIndex + direction;
-                targetIndex = Math.max(0, Math.min(targetIndex, allNavTargets.length - 1));
-
-                 // console.log(`%c[${now}ms] handleWheel: Threshold crossed! Direction: ${direction}, Current: ${currentIndex}, Target: ${targetIndex}`, 'color: purple;');
-
-                if (targetIndex !== currentIndex) {
-                    const targetSection = allNavTargets[targetIndex];
-                    if (targetSection && targetSection.id) {
-                        const targetScrollY = calculateConsistentTargetY(targetSection);
-                        // console.log(`%c[${now}ms] handleWheel: Animating to Section: ${targetSection.id} (Y: ${targetScrollY.toFixed(0)})`, 'color: purple; font-weight: bold;');
-
-                        // Reset accumulator immediately BEFORE starting animation
-                        accumulatedDeltaY = 0;
-                        // console.log(`%c[${now}ms] handleWheel: Reset accumulator BEFORE starting animation.`, 'color: purple;');
-
-                        // Call animateScroll, using the section-specific duration and ease
-                        animateScroll(scrollSnapContainer, sectionScrollDuration, {
-                            scrollTo: { y: targetScrollY }
-                            // Ease is now handled within animateScroll using sectionScrollEase by default
-                        });
-                    }
-                } else {
-                    // If target is the same, reset accumulator to prevent buildup if scrolling against boundary.
-                     accumulatedDeltaY = 0;
-                }
-            }
+             if (!isAnimating) {
+                event.preventDefault();
+                accumulatedDeltaY += event.deltaY;
+                 // Reset timeout on each wheel event while not animating
+                clearTimeout(wheelTimeout);
+                wheelTimeout = setTimeout(handleWheelScrollEnd, wheelScrollEndDelay);
+             } else {
+                // Prevent default scroll during animation but don't interfere with timeout/accumulation
+                event.preventDefault();
+             }
         }
     };
 
@@ -215,6 +202,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isAnimating) {
             return; // Ignore key presses during animation
         }
+
+        // Clear any pending wheel scroll timeout if key is pressed
+        clearTimeout(wheelTimeout);
+        accumulatedDeltaY = 0;
 
         let direction = 0;
         if (event.key === 'ArrowDown') direction = 1;
