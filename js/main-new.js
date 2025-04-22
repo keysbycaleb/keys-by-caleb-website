@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let accumulatedDeltaY = 0;
 
     // --- Configuration ---
-    const WHEEL_SCROLL_THRESHOLD = 100; // Pixels: Trigger animation after accumulating this much deltaY (Adjust sensitivity here)
+    const WHEEL_SCROLL_THRESHOLD = 150; // Pixels: Trigger animation after accumulating this much deltaY (Adjust sensitivity here)
     console.log(`WHEEL_SCROLL_THRESHOLD set to: ${WHEEL_SCROLL_THRESHOLD}`);
     const sectionScrollDuration = 0.7;
     const sectionScrollEase = 'power2.inOut';
