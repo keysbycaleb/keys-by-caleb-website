@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book The Full Experience | Keys by Caleb</title> <meta name="description" content="Book The Full Experience package ($1495) with Keys by Caleb for comprehensive live piano music for your entire wedding or event in Riverside, CA. Secure your date inquiry with a deposit.">
+    <meta name="keywords" content="book pianist, full event pianist, wedding pianist booking, event music booking, comprehensive piano package, Riverside pianist, Keys by Caleb, The Full Experience package, multi-step booking, stripe payment, deposit">
+    <meta name="author" content="Keys by Caleb">
+    <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/booking-style-new.css"> <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+
+    <script>
+        tailwind.config = { /* ... Tailwind Config ... */
+             theme: { extend: { fontFamily: { 'playfair': ['"Playfair Display"', 'serif'], 'inter': ['"Inter"', 'sans-serif'] }, colors: { 'brand-primary': '#a67c52', 'brand-secondary': '#b78a50', 'brand-accent': '#8d5f34', 'brand-text-dark': '#3a3a3a', 'brand-text-light': '#f8f8f8', 'brand-bg-light': '#fdf9f5', 'brand-bg-card': 'rgba(255, 255, 255, 0.95)', 'brand-bg-card-opaque': '#ffffff', 'brand-error': '#dc2626', 'brand-error-light': '#fee2e2', 'brand-success': '#059669', 'brand-success-light': '#d1fae5', 'brand-overlay': 'rgba(58, 44, 28, 0.45)', 'brand-header-bg': '#2d2d2d', 'brand-footer-bg': '#2d2d2d', 'brand-border': '#d1d5db', 'brand-border-light': 'rgba(166, 124, 82, 0.15)', } } }
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3JZ8f3UcsCnwcwnFC5TupNww5RQjgVUU&libraries=places&callback=initMapAutocomplete&loading=async" defer></script>
+</head>
+<body class="font-inter bg-brand-bg-light text-brand-text-dark antialiased">
+
+    <header id="main-header" class="fixed top-0 left-0 w-full z-[1000] shadow-md">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+             <div class="flex-shrink-0"><a href="index.html#hero" class="header-logo text-3xl font-playfair font-bold hover:text-brand-secondary transition-colors"> Keys by Caleb </a></div>
+             <div class="flex items-center space-x-4 lg:space-x-6">
+                 <div class="flex items-center space-x-3 sm:space-x-4 md:space-x-5">
+                    <a href="index.html#about" class="nav-link">About</a><a href="index.html#packages" class="nav-link">Services</a><a href="index.html#gallery" class="nav-link">Gallery</a><a href="index.html#testimonials" class="nav-link">Testimonials</a>
+                    <div class="relative nav-item-dropdown">
+                        <button type="button" class="nav-link booking-nav-link flex items-center active"> Booking <i class="fas fa-chevron-down text-xs ml-1"></i> </button>
+                        <div class="nav-dropdown absolute left-1/2 transform -translate-x-1/2 lg:left-0 lg:transform-none mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200/50">
+                            <a href="booking-jom-new.html" class="dropdown-link">Just One Moment</a>
+                            <a href="booking-hourly.html" class="dropdown-link">Book By The Hour</a>
+                            <a href="booking-tfe-new.html" class="dropdown-link">Book Full Experience</a>
+                        </div>
+                    </div>
+                     <a href="index.html#contact" class="nav-link">Contact</a>
+                 </div>
+                 <div class="w-px h-6 bg-gray-400 opacity-50 hidden md:block"></div>
+                 <div class="flex items-center space-x-3 sm:space-x-4">
+                     <a href="mailto:keysbycaleb@gmail.com" class="nav-link text-xl" title="Email Me"><i class="fas fa-envelope"></i></a>
+                     <div class="relative nav-item-dropdown">
+                         <button type="button" class="nav-link follow-button flex items-center">Follow Us <i class="fas fa-chevron-down text-xs ml-1"></i></button>
+                         <div class="nav-dropdown absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200/50">
+                            <a href="https://www.instagram.com/keysbycaleb/" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fab fa-facebook-f w-4 mr-2 text-center"></i> Facebook</a>
+                            <a href="https://www.instagram.com/keysbycaleb/" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fab fa-instagram w-4 mr-2 text-center"></i> Instagram</a>
+                            <a href="https://tiktok.com/@keys_by_caleb" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fab fa-tiktok w-4 mr-2 text-center"></i> TikTok</a>
+                            <a href="https://www.youtube.com/@keysbycaleb" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fab fa-youtube w-4 mr-2 text-center"></i> YouTube</a>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+        </nav>
+    </header>
+
+    <main class="pt-[calc(var(--header-height)+2rem)] md:pt-[calc(var(--header-height)+3rem)] pb-16 md:pb-24">
+        <section id="booking-intro" class="mb-12 md:mb-16 text-center animate-fade-in">
+            <div class="container mx-auto px-6">
+                <h1 class="text-4xl md:text-5xl font-playfair font-bold text-brand-primary mb-3 leading-tight">Book The Full Experience</h1> <p class="text-lg md:text-xl font-inter text-brand-text-dark opacity-80 mb-10 max-w-3xl mx-auto">Secure comprehensive, elegant live piano coverage for your entire event ($1495 Package). Follow the steps below to provide initial details and secure your date inquiry with a deposit.</p>
+            </div>
+        </section>
+
+        <section id="booking-form-section">
+             <div class="container mx-auto px-6 flex justify-center">
+                <div class="booking-card w-full max-w-3xl">
+                     <form id="booking-form" name="booking-tfe" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="relative overflow-hidden" novalidate>
+                         <input type="hidden" name="form-name" value="booking-tfe">
+                         <p class="hidden"><label>Don’t fill this out: <input name="bot-field"></label></p>
+                         <div class="step-indicator-container mb-10 md:mb-12" role="tablist" aria-label="Booking Steps">
+                            <div class="step-indicator active" data-step="1" role="tab" aria-selected="true" aria-controls="step-panel-1" id="step-tab-1"><span class="indicator-circle"><span class="indicator-icon"><i class="fas fa-calendar-alt"></i></span><span class="indicator-check"><i class="fas fa-check"></i></span></span><span class="indicator-label">Primary Event</span></div><div class="step-connector"></div>
+                            <div class="step-indicator" data-step="2" role="tab" aria-selected="false" aria-controls="step-panel-2" id="step-tab-2"><span class="indicator-circle"><span class="indicator-icon"><i class="fas fa-map-marker-alt"></i></span><span class="indicator-check"><i class="fas fa-check"></i></span></span><span class="indicator-label">Venue & Logistics</span></div><div class="step-connector"></div>
+                            <div class="step-indicator" data-step="3" role="tab" aria-selected="false" aria-controls="step-panel-3" id="step-tab-3"><span class="indicator-circle"><span class="indicator-icon"><i class="fas fa-user"></i></span><span class="indicator-check"><i class="fas fa-check"></i></span></span><span class="indicator-label">Contact Info</span></div><div class="step-connector"></div>
+                            <div class="step-indicator" data-step="4" role="tab" aria-selected="false" aria-controls="step-panel-4" id="step-tab-4"><span class="indicator-circle"><span class="indicator-icon"><i class="fas fa-info-circle"></i></span><span class="indicator-check"><i class="fas fa-check"></i></span></span><span class="indicator-label">Details</span></div><div class="step-connector"></div>
+                            <div class="step-indicator" data-step="5" role="tab" aria-selected="false" aria-controls="step-panel-5" id="step-tab-5"><span class="indicator-circle"><span class="indicator-icon"><i class="fas fa-check-double"></i></span><span class="indicator-check"><i class="fas fa-check"></i></span></span><span class="indicator-label">Review</span></div><div class="step-connector"></div>
+                            <div class="step-indicator" data-step="6" role="tab" aria-selected="false" aria-controls="step-panel-6" id="step-tab-6"><span class="indicator-circle"><span class="indicator-icon"><i class="fas fa-shield-alt"></i></span><span class="indicator-check"><i class="fas fa-check"></i></span></span><span class="indicator-label">Confirm & Pay</span></div>
+                        </div>
+
+                        <div class="steps-container">
+                            <div class="booking-step active" data-step="1" role="tabpanel" id="step-panel-1" aria-labelledby="step-tab-1">
+                                <h3 class="step-title">Primary Event Basics</h3>
+                                <p class="step-description mb-6">Let's start with the core details of your main event date.</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                                    <div class="input-group relative"><label for="event_date" class="form-label">Primary Event Date <span class="text-brand-error">*</span></label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-calendar-day"></i></span><input type="date" id="event_date" name="event_date" required class="form-input with-icon" aria-required="true" aria-describedby="event_date-error"></div><div class="error-message" id="event_date-error" data-for="event_date">Future date required</div></div>
+                                    <div class="input-group relative"><label for="event_time" class="form-label">Approximate Start Time <span class="text-brand-error">*</span></label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-clock"></i></span><input type="time" id="event_time" name="event_time" required class="form-input with-icon" aria-required="true" aria-describedby="event_time-error"></div><div class="error-message" id="event_time-error" data-for="event_time">Required</div></div>
+                                    <div class="input-group md:col-span-2 relative"><label for="event_type" class="form-label">Type of Primary Event <span class="text-brand-error">*</span></label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-glass-cheers"></i></span><select id="event_type" name="event_type" required class="form-select with-icon" aria-required="true" aria-describedby="event_type-error"><option value="" disabled selected>Select the primary occasion...</option><option value="Wedding Ceremony">Wedding Ceremony</option><option value="Wedding Reception">Wedding Reception</option><option value="Wedding Ceremony & Reception">Wedding Ceremony & Reception</option><option value="Corporate Event">Corporate Event</option><option value="Private Party">Private Party</option><option value="Gala / Fundraiser">Gala / Fundraiser</option><option value="Multi-Day Event">Multi-Day Event (Specify in Notes)</option><option value="Other Comprehensive Event">Other Comprehensive Event</option></select></div><div class="error-message" id="event_type-error" data-for="event_type">Required</div></div>
+                                </div>
+                            </div>
+                            <div class="booking-step" data-step="2" role="tabpanel" id="step-panel-2" aria-labelledby="step-tab-2">
+                                <h3 class="step-title">Venue & Logistics</h3>
+                                <p class="step-description mb-6">Where will the primary performance take place and what's available?</p>
+                                <div class="grid grid-cols-1 gap-y-5">
+                                    <div class="input-group relative"><label for="venue_name" class="form-label">Primary Venue Name (if applicable)</label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-building"></i></span><input type="text" id="venue_name" name="venue_name" class="form-input with-icon" placeholder="E.g., The Grand Ballroom"></div><div class="error-message" data-for="venue_name"></div></div>
+                                    <div class="input-group relative"><label for="venue_address" class="form-label">Primary Venue Address or City <span class="text-brand-error">*</span></label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-map-pin"></i></span><input type="text" id="venue_address" name="venue_address" required class="form-input with-icon" placeholder="Street Address, City, State, Zip" aria-required="true" aria-describedby="venue_address-error venue_address-help"></div><div class="error-message" id="venue_address-error" data-for="venue_address">Location is required</div><p class="input-help-text" id="venue_address-help">Serving Riverside, CA & surrounding areas. Travel fees may apply beyond a certain radius.</p></div>
+                                    <div class="input-group relative"><label for="piano_availability" class="form-label">Piano Availability at Primary Venue</label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-piano"></i></span><select id="piano_availability" name="piano_availability" class="form-select with-icon" aria-describedby="piano_availability-help"><option value="Unknown" selected>I'm not sure / Don't know yet</option><option value="Yes - Acoustic Grand">Yes - Acoustic Grand Piano</option><option value="Yes - Acoustic Upright">Yes - Acoustic Upright Piano</option><option value="Yes - Digital Keyboard">Yes - Digital Keyboard Available</option><option value="No">No - Need Keyboard & Sound System</option></select></div><div class="error-message" data-for="piano_availability"></div><p class="input-help-text" id="piano_availability-help">If 'No', Caleb brings a professional keyboard and amplification.</p></div>
+                                </div>
+                            </div>
+                            <div class="booking-step" data-step="3" role="tabpanel" id="step-panel-3" aria-labelledby="step-tab-3">
+                                <h3 class="step-title">Your Contact Information</h3>
+                                <p class="step-description mb-6">How can Caleb reach you to discuss the full scope and confirm details?</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                                    <div class="input-group relative"><label for="name" class="form-label">Full Name <span class="text-brand-error">*</span></label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-user"></i></span><input type="text" id="name" name="name" required class="form-input with-icon" placeholder="Your Full Name" autocomplete="name" aria-required="true" aria-describedby="name-error"></div><div class="error-message" id="name-error" data-for="name">Name is required.</div></div>
+                                    <div class="input-group relative"><label for="email" class="form-label">Email Address <span class="text-brand-error">*</span></label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-envelope"></i></span><input type="email" id="email" name="email" required class="form-input with-icon" placeholder="you@example.com" autocomplete="email" inputmode="email" aria-required="true" aria-describedby="email-error"></div><div class="error-message" id="email-error" data-for="email">Valid email is required.</div></div>
+                                    <div class="input-group md:col-span-2 relative"><label for="phone" class="form-label">Phone Number</label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-phone"></i></span><input type="tel" id="phone" name="phone" class="form-input with-icon" placeholder="(XXX) XXX-XXXX" autocomplete="tel" inputmode="tel" aria-describedby="phone-error phone-help"></div><div class="error-message" id="phone-error" data-for="phone">Please enter a valid phone number format.</div><p class="input-help-text" id="phone-help">Optional, but helpful for urgent communication.</p></div>
+                                </div>
+                            </div>
+                            <div class="booking-step" data-step="4" role="tabpanel" id="step-panel-4" aria-labelledby="step-tab-4">
+                                <h3 class="step-title">Additional Details</h3>
+                                <p class="step-description mb-6">Anything else you'd like to share about your overall event needs?</p>
+                                <div class="grid grid-cols-1 gap-y-5">
+                                    <div class="input-group relative"><label for="referral" class="form-label">How did you hear about Keys by Caleb?</label><div class="input-wrapper"><span class="input-icon"><i class="fas fa-search-location"></i></span><select id="referral" name="referral" class="form-select with-icon"><option value="" selected>Select an option (Optional)</option><option value="Google Search">Google Search</option><option value="Social Media">Social Media</option><option value="Referral (Friend/Family)">Referral (Friend/Family)</option><option value="Referral (Venue/Planner)">Referral (Venue/Planner)</option><option value="Wedding Wire / The Knot">Wedding Wire / The Knot</option><option value="Attended Event">Attended Event</option><option value="Other">Other</option></select></div><div class="error-message" data-for="referral"></div></div>
+                                    <div class="input-group relative"><label for="message" class="form-label">Overall Event Scope, Music Style, or Notes</label><div class="input-wrapper"><textarea id="message" name="message" rows="4" class="form-textarea" placeholder="E.g., 'Need coverage for ceremony, cocktail hour, and dinner.', 'Interested in jazz and pop music.', 'Any questions?'" aria-describedby="message-help"></textarea></div><div class="error-message" data-for="message"></div><p class="input-help-text" id="message-help">Optional: Share details about the full scope, music preferences, etc.</p></div>
+                                </div>
+                            </div>
+                             <div class="booking-step" data-step="5" role="tabpanel" id="step-panel-5" aria-labelledby="step-tab-5">
+                                <h3 class="step-title">Review Your Request</h3>
+                                <p class="step-description mb-6">Please check the initial details below. Your request will be submitted before proceeding to the final confirmation step.</p>
+                                <div class="booking-summary enhanced-summary space-y-5">
+                                    <div class="summary-section"><div class="summary-header"><h4 class="summary-title"><i class="fas fa-calendar-alt fa-fw mr-2 text-brand-primary opacity-80"></i>Primary Event Details</h4><button type="button" class="summary-edit-link" data-target-step="1" aria-label="Edit Event Details">Edit</button></div><div class="summary-content"><p><strong>Date:</strong> <span id="summary-date">-</span></p><p><strong>Time:</strong> <span id="summary-time">-</span></p><p><strong>Type:</strong> <span id="summary-event_type">-</span></p></div></div>
+                                    <div class="summary-section"><div class="summary-header"><h4 class="summary-title"><i class="fas fa-map-marker-alt fa-fw mr-2 text-brand-primary opacity-80"></i>Primary Venue & Logistics</h4><button type="button" class="summary-edit-link" data-target-step="2" aria-label="Edit Venue and Logistics">Edit</button></div><div class="summary-content"><p><strong>Venue:</strong> <span id="summary-venue_name">-</span></p><p><strong>Address:</strong> <span id="summary-venue_address">-</span></p><p><strong>Piano:</strong> <span id="summary-piano_availability">-</span></p></div></div>
+                                    <div class="summary-section"><div class="summary-header"><h4 class="summary-title"><i class="fas fa-user fa-fw mr-2 text-brand-primary opacity-80"></i>Contact Information</h4><button type="button" class="summary-edit-link" data-target-step="3" aria-label="Edit Contact Information">Edit</button></div><div class="summary-content"><p><strong>Name:</strong> <span id="summary-name">-</span></p><p><strong>Email:</strong> <span id="summary-email">-</span></p><p><strong>Phone:</strong> <span id="summary-phone">-</span></p></div></div>
+                                    <div class="summary-section"><div class="summary-header"><h4 class="summary-title"><i class="fas fa-info-circle fa-fw mr-2 text-brand-primary opacity-80"></i>Additional Details</h4><button type="button" class="summary-edit-link" data-target-step="4" aria-label="Edit Additional Details">Edit</button></div><div class="summary-content"><p><strong>Referral:</strong> <span id="summary-referral">-</span></p><p><strong>Notes:</strong> <span id="summary-message" class="block whitespace-pre-wrap">-</span></p></div></div>
+                                </div>
+                                 <div id="form-message" class="form-message-area error mt-6"></div>
+                            </div>
+                             <div class="booking-step" data-step="6" role="tabpanel" id="step-panel-6" aria-labelledby="step-tab-6">
+                                <h3 class="step-title">Confirm & Proceed to Payment</h3>
+                                <p class="step-description mb-6">Please review and agree to the terms below to finalize your booking request with a deposit.</p>
+                                <div class="disclaimers space-y-5 mb-8 text-sm">
+                                    <div class="disclaimer-item p-4 bg-gray-50 border border-gray-200 rounded-md"><h4 class="font-semibold text-brand-accent mb-2">Package Scope: The Full Experience</h4><p class="text-gray-700 leading-relaxed">This package provides <strong>comprehensive piano coverage</strong> tailored to your entire event or series of events (e.g., wedding ceremony, cocktail hour, reception dinner). The exact duration, number of segments covered, and final scope will be determined during a follow-up consultation with Caleb based on the details you provided and any further discussion. This package represents the best value for complete musical ambiance throughout your occasion(s).</p></div>
+                                    <div class="disclaimer-item p-4 bg-gray-50 border border-gray-200 rounded-md"><h4 class="font-semibold text-brand-accent mb-2">Payment, Quote & Confirmation</h4><p class="text-gray-700 leading-relaxed">Pricing for 'The Full Experience' is customized (starting at $1495). Clicking 'Proceed to Secure Payment' will redirect you to Stripe to submit a <strong>standard deposit</strong> to secure your date inquiry. Caleb will contact you within 24-48 hours to discuss the full scope, provide a personalized quote for the remaining balance, and confirm final availability. <strong>Your booking is fully confirmed only upon agreement of the final quote, successful deposit payment, and subsequent confirmation email from Caleb.</strong> Standard cancellation policies apply (details provided with quote).</p></div>
+                                </div>
+                                <div class="agreement-checkboxes space-y-3 mb-6">
+                                    <div class="input-group relative">
+                                         <label class="flex items-start checkbox-label-inline" for="agree_scope">
+                                             <input type="checkbox" id="agree_scope" name="agree_scope" required class="form-checkbox mr-3 mt-1 flex-shrink-0" aria-describedby="agree_scope-error">
+                                             <span class="text-sm font-medium text-gray-800">I understand 'The Full Experience' is a comprehensive package, and the final scope and quote will be confirmed after consultation.<span class="text-brand-error">*</span></span>
+                                         </label>
+                                         <div class="error-message ml-7 text-xs" data-for="agree_scope">Required</div>
+                                     </div>
+                                     <div class="input-group relative">
+                                         <label class="flex items-start checkbox-label-inline" for="agree_payment">
+                                             <input type="checkbox" id="agree_payment" name="agree_payment" required class="form-checkbox mr-3 mt-1 flex-shrink-0" aria-describedby="agree_payment-error">
+                                             <span class="text-sm font-medium text-gray-800">I understand that clicking the button below redirects to Stripe for a deposit and that booking is finalized after consultation, quote agreement, and confirmation email.<span class="text-brand-error">*</span></span>
+                                         </label>
+                                         <div class="error-message ml-7 text-xs" data-for="agree_payment">Required</div>
+                                     </div>
+                                </div>
+                                <div id="final-step-error" class="form-message-area error mb-4"></div>
+                            </div>
+                        </div> <div class="form-navigation mt-8 md:mt-10 pt-6 border-t border-brand-border-light flex justify-between items-center">
+                            <button type="button" id="prev-button" class="btn btn-secondary" style="visibility: hidden;" aria-label="Previous Step"><i class="fas fa-arrow-left mr-2"></i> Previous</button>
+                            <button type="button" id="next-button" class="btn btn-primary" aria-label="Next Step">Next <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button type="button" id="proceed-to-disclaimers-button" class="btn btn-primary hidden" aria-label="Proceed to Confirmation">Proceed to Confirmation <i class="fas fa-arrow-right ml-2"></i></button>
+                            <button type="button" id="payment-button"
+                                    data-stripe-link="https://book.stripe.com/00g02I6lEbZe6YgaEF"
+                                    class="btn btn-success hidden" aria-label="Proceed to Secure Payment">
+                                Proceed to Secure Payment <i class="fas fa-lock ml-2"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="booking-loader-overlay" class="loader-overlay hidden" aria-hidden="true"><div class="loader-spinner" role="progressbar" aria-label="Loading..."></div><p id="loader-text">Processing...</p></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="main-footer" class="bg-brand-footer-bg text-brand-text-light py-12 md:py-16 mt-16 md:mt-24">
+         <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center md:text-left">
+                 <div class="space-y-3"><a href="index.html#hero" class="inline-block font-playfair text-2xl font-bold footer-nav-link">Keys by Caleb</a><p class="text-sm opacity-75">Elegant Live Piano Music</p><p class="text-xs opacity-60">Serving Riverside, CA & Surrounding Areas</p><p class="text-xs opacity-60 mt-4">&copy; <span id="current-year">2025</span> Keys by Caleb. All Rights Reserved.</p></div>
+                 <div class="space-y-3"><h4 class="footer-heading">Quick Links</h4><ul class="space-y-2"><li><a href="index.html#about" class="footer-nav-link">About Caleb</a></li><li><a href="index.html#packages" class="footer-nav-link">Services & Packages</a></li><li><a href="index.html#gallery" class="footer-nav-link">Gallery</a></li><li><a href="index.html#testimonials" class="footer-nav-link">Testimonials</a></li><li><a href="index.html#contact" class="footer-nav-link">Contact Us</a></li></ul></div>
+                 <div class="space-y-3">
+                     <h4 class="footer-heading">Booking</h4>
+                     <ul class="space-y-2">
+                         <li><a href="booking-jom-new.html" class="footer-nav-link">Book Just One Moment</a></li>
+                         <li><a href="booking-hourly.html" class="footer-nav-link">Book By The Hour</a></li>
+                         <li><a href="booking-tfe-new.html" class="footer-nav-link">Book Full Experience</a></li>
+                     </ul>
+                     <h4 class="footer-heading mt-6">Connect</h4>
+                     <div class="flex justify-center md:justify-start space-x-4 mt-3">
+                        <a href="https://www.instagram.com/keysbycaleb/" target="_blank" rel="noopener noreferrer" class="footer-social-icon" title="Facebook"><i class="fab fa-facebook-f"></i> <span class="sr-only">Facebook</span></a>
+                        <a href="https://www.instagram.com/keysbycaleb/" target="_blank" rel="noopener noreferrer" class="footer-social-icon" title="Instagram"><i class="fab fa-instagram"></i> <span class="sr-only">Instagram</span></a>
+                        <a href="https://tiktok.com/@keys_by_caleb" target="_blank" rel="noopener noreferrer" class="footer-social-icon" title="TikTok"><i class="fab fa-tiktok"></i> <span class="sr-only">TikTok</span></a>
+                        <a href="https://www.youtube.com/@keysbycaleb" target="_blank" rel="noopener noreferrer" class="footer-social-icon" title="YouTube"><i class="fab fa-youtube"></i> <span class="sr-only">YouTube</span></a>
+                        <a href="mailto:keysbycaleb@gmail.com" class="footer-social-icon" title="Email"><i class="fas fa-envelope"></i> <span class="sr-only">Email</span></a>
+                     </div>
+                 </div>
+            </div>
+        </div>
+    </footer>
+
+    <button id="scroll-to-top" class="fixed bottom-6 right-6 bg-brand-primary text-white w-11 h-11 rounded-full shadow-lg hidden justify-center items-center hover:bg-brand-secondary transition-all duration-300 z-40 text-xl" aria-label="Scroll back to top"> <i class="fas fa-arrow-up"></i> </button>
+
+    <script src="js/booking-logic-new.js"></script>
+
+</body>
+</html>

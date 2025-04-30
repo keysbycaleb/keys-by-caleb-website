@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keys by Caleb | Elegant Piano Music for Weddings & Events</title>
+    <meta name="description" content="Keys by Caleb provides beautiful, professional live piano music for weddings, corporate events, and special occasions in Riverside, CA and surrounding areas. Book online!">
+    <meta name="keywords" content="wedding pianist, event pianist, live piano music, wedding music, corporate event music, pianist for hire, Riverside pianist, Caleb, Keys by Caleb, book pianist online">
+    <meta name="author" content="Keys by Caleb">
+    <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="css/style-new.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'playfair': ['"Playfair Display"', 'serif'],
+                        'inter': ['"Inter"', 'sans-serif']
+                    },
+                    colors: {
+                        'brand-primary': '#a67c52',
+                        'brand-secondary': '#b78a50',
+                        'brand-accent': '#8d5f34',
+                        'brand-text-dark': '#3a3a3a',
+                        'brand-text-light': '#f8f8f8',
+                        'brand-bg-light': '#fdf9f5',
+                        'brand-bg-card': 'rgba(255, 255, 255, 0.92)',
+                        'brand-bg-card-opaque': '#ffffff',
+                        'brand-border': '#d1d5db',
+                        'brand-border-focus': 'var(--color-primary)',
+                        'brand-error': '#dc2626',
+                        'brand-success': '#059669',
+                        'brand-overlay': 'rgba(58, 44, 28, 0.45)',
+                        'brand-header-bg': '#2d2d2d',
+                        'brand-footer-bg': '#2d2d2d',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-inter bg-brand-bg-light text-brand-text-dark antialiased">
+
+<header id="main-header" class="fixed top-0 left-0 w-full z-[1000]">
+    <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+        <div class="flex-shrink-0">
+            <a href="#hero" class="header-logo text-3xl font-playfair font-bold hover:text-brand-secondary transition-colors internal-link"> Keys by Caleb </a>
+        </div>
+        <div class="flex items-center space-x-4 lg:space-x-6">
+            <div class="flex items-center space-x-3 sm:space-x-4 md:space-x-5">
+                 <a href="#about" class="nav-link internal-link">About</a>
+                <a href="#packages" class="nav-link internal-link">Services</a>
+                <a href="#gallery" class="nav-link internal-link">Gallery</a>
+                <a href="#testimonials" class="nav-link internal-link">Testimonials</a>
+                <div class="relative nav-item-dropdown">
+                    <button type="button" class="nav-link booking-nav-link flex items-center"> Booking <i class="fas fa-chevron-down text-xs ml-1"></i> </button>
+                    <div class="nav-dropdown absolute left-1/2 transform -translate-x-1/2 lg:left-0 lg:transform-none mt-1 w-48 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200/50">
+                        <a href="booking-jom-new.html" class="dropdown-link">Just One Moment</a>
+                        <a href="booking-hourly.html" class="dropdown-link">Book By The Hour</a>
+                        <a href="booking-tfe-new.html" class="dropdown-link">Book Full Experience</a>
+                    </div>
+                </div>
+                <a href="#contact" class="nav-link internal-link">Contact</a>
+            </div>
+            <div class="w-px h-6 bg-gray-400 opacity-50 hidden md:block"></div>
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <a href="mailto:keysbycaleb@gmail.com" class="nav-link text-xl" title="Email Me"><i class="fas fa-envelope"></i></a>
+                <div class="relative nav-item-dropdown">
+                    <button type="button" class="nav-link follow-button flex items-center">Follow Us <i class="fas fa-chevron-down text-xs ml-1"></i></button>
+                    <div class="nav-dropdown absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg py-1 z-10 border border-gray-200/50">
+                        <a href="https://www.instagram.com/keysbycaleb/" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fab fa-facebook-f w-4 mr-2 text-center"></i> Facebook</a>
+                        <a href="https://www.instagram.com/keysbycaleb/" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fab fa-instagram w-4 mr-2 text-center"></i> Instagram</a>
+                        <a href="https://tiktok.com/@keys_by_caleb" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fab fa-tiktok w-4 mr-2 text-center"></i> TikTok</a>
+                        <a href="youtube.com/@KeysByCaleb" target="_blank" rel="noopener noreferrer" class="dropdown-link"><i class="fab fa-youtube w-4 mr-2 text-center"></i> YouTube</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<div class="scroll-snap-container-home">
+<main>
+    <section id="hero" class="flex items-center justify-center bg-cover bg-center bg-fixed relative" style="background-image: url('assets/images/hero_pic.jpg');">
+        <div class="absolute inset-0 bg-brand-overlay z-0"></div>
+        <div id="tsparticles-hero" class="absolute inset-0 z-1 pointer-events-none"></div>
+        <div class="text-center z-10 px-4 relative animate-fade-in-up">
+            <h1 class="text-5xl md:text-7xl font-playfair font-bold text-white mb-4 leading-tight">Elegant Music for Your<br>Unforgettable Moments</h1>
+            <p class="text-lg md:text-xl font-inter text-brand-text-light mb-8 max-w-2xl mx-auto">Live piano artistry by Caleb creates the perfect atmosphere for weddings, corporate events, and private parties in Riverside, CA and beyond.</p>
+            <a href="#packages" class="btn btn-primary internal-link">View Packages <i class="fas fa-chevron-down ml-2"></i></a>
+        </div>
+    </section>
+
+    <section id="about" class="bg-brand-bg-light">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row items-center gap-12 md:gap-16">
+            <div class="md:w-2/5"><img src="assets/images/caleb_profile_pic.jpg" alt="Caleb playing piano outdoors at an event" class="rounded-lg shadow-xl w-full h-auto object-cover aspect-[4/5] max-h-[70vh]"></div>
+            <div class="md:w-3/5 text-center md:text-left">
+                <h2 class="section-title">Meet Caleb</h2><p class="section-subtitle mb-6">Your Event Pianist</p>
+                <p class="mb-4 text-lg leading-relaxed">Hi! I'm Caleb, your Riverside-based event pianist. For the last 10 years, the piano has been my passion, and I love bringing beautiful live music to special occasions. My experience includes over three and a half years enriching live worship services, honing my ability to perform expressively and connect with the moment.</p>
+                <p class="mb-6 text-lg leading-relaxed">One unique aspect of my playing is that I primarily play by ear. This allows me to learn new pieces quickly and intuitively – perfect if you have a special request! It also lets me add my own refined, heartfelt touch, especially to those timeless classics we all know and love.</p>
+                <p class="mb-6 text-lg leading-relaxed">Whether you're planning a wedding ceremony, cocktail hour, reception, or another unique celebration, I enjoy collaborating closely with clients. My goal is to curate the perfect, personalized musical atmosphere that truly complements the ambiance of your special day.</p>
+                <a href="#contact" class="btn btn-secondary internal-link">Discuss Your Event <i class="fas fa-comments ml-2"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <section id="packages" class="bg-gradient-to-b from-white to-brand-bg-light">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="section-title">Packages</h2><p class="section-subtitle mb-12 md:mb-16 max-w-3xl mx-auto">Choose the perfect live piano experience for your event, from focused moments to comprehensive coverage.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+                <div class="package-card">
+                    <div class="package-icon"><i class="fas fa-stopwatch"></i></div><h3 class="package-title">Just One Moment</h3><p class="package-price">$495</p><p class="package-description">Ideal for ceremonies, proposals, or specific highlights. Includes up to 1 hour of continuous live piano music.</p><a href="booking-jom-new.html" class="btn btn-primary w-full mt-6">Book This Moment <i class="fas fa-arrow-right ml-2"></i></a>
+                </div>
+                <div class="package-card">
+                    <div class="package-icon"><i class="fas fa-clock"></i></div><h3 class="package-title">By the Hour</h3><p class="package-price">$275 / Hour (2hr Min)</p><p class="package-description">Flexible timing tailored to your needs. Perfect for parties, corporate functions, or unique events requiring specific durations.</p><a href="booking-hourly.html" class="btn btn-primary w-full mt-6">Book Hourly <i class="fas fa-calendar-alt ml-2"></i></a>
+                </div>
+                <div class="package-card">
+                    <div class="package-icon"><i class="fas fa-star"></i></div><h3 class="package-title">The Full Experience</h3><p class="package-price">$1495 Package</p><p class="package-description">Comprehensive wedding coverage (e.g., ceremony + cocktail hour + dinner). Custom curated music throughout.</p><a href="booking-tfe-new.html" class="btn btn-primary w-full mt-6">Book Full Experience <i class="fas fa-chess-king ml-2"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="bg-brand-bg-light section-allow-scroll">
+         <div class="container mx-auto px-6 text-center">
+            <h2 class="section-title">Gallery</h2><p class="section-subtitle mb-12 md:mb-16">Moments captured from beautiful events.</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                <div class="gallery-item"><img src="assets/images/gallery1.jpg" alt="Gallery Image 1" class="gallery-image"></div>
+                <div class="gallery-item"><img src="assets/images/gallery2.jpg" alt="Gallery Image 2 - Caleb playing piano" class="gallery-image" style="object-position: center 60%;"></div> 
+                <div class="gallery-item"><img src="assets/images/gallery3.jpg" alt="Gallery Image 3 - Piano at event" class="gallery-image" style="object-position: center 60%;"></div>    
+                <div class="gallery-item"><img src="assets/images/gallery4.jpg" alt="Gallery Image 4" class="gallery-image"></div>
+                <div class="gallery-item"><img src="assets/images/gallery5.jpg" alt="Gallery Image 5 - Outdoor piano" class="gallery-image" style="object-position: center 60%;"></div>     
+                <div class="gallery-item"><img src="assets/images/gallery6.jpg" alt="Gallery Image 6" class="gallery-image"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="testimonials" class="bg-brand-bg-light section-allow-scroll">
+         <div class="container mx-auto px-6 text-center">
+            <h2 class="section-title">Kind Words</h2><p class="section-subtitle mb-8 md:mb-10">What clients are saying about Keys by Caleb.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 mb-6 md:mb-8">
+                <div class="testimonial-card"><div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"Caleb's music was the absolute highlight of our ceremony. So elegant and moving. Many guests commented on how beautiful it was!"</p><p class="font-semibold text-brand-primary">- Sarah & Tom W.</p></div><div class="testimonial-card"><div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"As an event planner, I need reliable and talented vendors. Caleb provided the perfect elegant background music for our corporate gala. Professional and easy to work with."</p><p class="font-semibold text-brand-primary">- J. Davis, Event Planner</p></div><div class="testimonial-card"><div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"From the first email to the final note, Caleb was a pleasure. He learned a special song for us and played it beautifully. Highly recommend!"</p><p class="font-semibold text-brand-primary">- Emily R.</p></div>
+            </div>
+            <div class="mt-8 md:mt-10 pt-8 md:pt-10 border-t border-brand-primary/10">
+                <h4 class="font-playfair text-2xl md:text-3xl text-brand-accent mb-4">Ready to Create Your Own Beautiful Moment?</h4>
+                <p class="cta-text text-brand-text-dark opacity-90 mb-6 max-w-lg mx-auto leading-relaxed">Inspired by these stories? Let's discuss how Keys by Caleb can add the perfect touch of elegance to your upcoming event in Riverside or the surrounding areas.</p>
+                <a href="#contact" class="btn btn-secondary internal-link">Inquire About Your Date <i class="fas fa-calendar-check ml-2"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="bg-gradient-to-b from-white to-brand-bg-light section-allow-scroll">
+        <div class="container mx-auto px-6 flex flex-col justify-center">
+            <div class="max-w-3xl mx-auto text-center mb-6 md:mb-8"><h2 class="section-title">Get In Touch</h2><p class="section-subtitle">Ready to discuss the music for your special day? Fill out the form below or email <a href="mailto:keysbycaleb@gmail.com" class="text-brand-primary hover:text-brand-secondary font-medium">keysbycaleb@gmail.com</a> directly.</p></div>
+            <form id="contact-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="max-w-xl mx-auto bg-brand-bg-card p-6 md:p-8 rounded-lg shadow-lg border border-brand-secondary/20 w-full">
+                <div id="form-message" class="mb-6 hidden p-4 rounded-md text-center"></div>
+                <input type="hidden" name="form-name" value="contact">
+                <p class="hidden"><label>Don’t fill this out: <input name="bot-field"></label></p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 mb-4">
+                    <div class="input-group"><label for="name" class="form-label">Full Name <span class="text-brand-error">*</span></label><input type="text" id="name" name="name" required class="form-input" placeholder="Your Name"><div class="error-message" data-for="name">Name is required.</div></div>
+                    <div class="input-group"><label for="email" class="form-label">Email Address <span class="text-brand-error">*</span></label><input type="email" id="email" name="email" required class="form-input" placeholder="you@example.com"><div class="error-message" data-for="email">A valid email is required.</div></div>
+                    <div class="input-group"><label for="contact_event_date" class="form-label">Event Date <span class="text-brand-error">*</span></label><input type="date" id="contact_event_date" name="event_date" required class="form-input"><div class="error-message" data-for="event_date">Event date is required.</div></div>
+                    <div class="input-group"><label for="contact_event_type" class="form-label">Event Type</label><select id="contact_event_type" name="event_type" class="form-select"><option value="">Select Type</option><option value="Wedding Ceremony">Ceremony</option><option value="Wedding Cocktail Hour">Cocktail Hour</option><option value="Wedding Reception/Dinner">Reception/Dinner</option><option value="Corporate Event">Corporate</option><option value="Private Party">Private Party</option><option value="Other">Other</option></select></div>
+                </div>
+                <div class="input-group mb-3"><label for="venue" class="form-label">Venue Name/Location</label><input type="text" id="venue" name="venue" class="form-input" placeholder="Venue Name or City"></div>
+                <div class="input-group mb-4"><label for="message" class="form-label">Message <span class="text-brand-error">*</span></label><textarea id="message" name="message" rows="3" required class="form-textarea" placeholder="Tell me a bit about your event, which package you're interested in (if known), and any questions you have..."></textarea><div class="error-message" data-for="message">Message is required.</div></div>
+                <div class="text-center"><button type="submit" id="submit-button" class="btn btn-primary w-full md:w-auto">Send Inquiry <i class="fas fa-paper-plane ml-2"></i></button></div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer id="main-footer" class="bg-brand-footer-bg text-brand-text-light py-12 md:py-16">
+    <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center md:text-left">
+            <div class="space-y-3"><a href="index.html#hero" class="inline-block font-playfair text-2xl font-bold footer-nav-link internal-link">Keys by Caleb</a><p class="text-sm opacity-75">Elegant Live Piano Music</p><p class="text-xs opacity-60">Serving Riverside, CA & Surrounding Areas</p><p class="text-xs opacity-60 mt-4">© <span id="current-year">2025</span> Keys by Caleb. All Rights Reserved.</p></div>
+            <div class="space-y-3"><h4 class="footer-heading">Quick Links</h4><ul class="space-y-2"><li><a href="index.html#about" class="footer-nav-link internal-link">About Caleb</a></li><li><a href="index.html#packages" class="footer-nav-link internal-link">Services & Packages</a></li><li><a href="index.html#gallery" class="footer-nav-link internal-link">Gallery</a></li><li><a href="index.html#testimonials" class="footer-nav-link internal-link">Testimonials</a></li><li><a href="index.html#contact" class="footer-nav-link internal-link">Contact Us</a></li></ul></div>
+            <div class="space-y-3">
+                <h4 class="footer-heading">Booking</h4>
+                <ul class="space-y-2">
+                    <li><a href="booking-jom-new.html" class="footer-nav-link">Book Just One Moment</a></li>
+                    <li><a href="booking-hourly.html" class="footer-nav-link">Book By The Hour</a></li>
+                    <li><a href="booking-tfe-new.html" class="footer-nav-link">Book Full Experience</a></li>
+                </ul>
+                <h4 class="footer-heading mt-6">Connect</h4>
+                <div class="flex justify-center md:justify-start space-x-4 mt-3">
+                    <a href="https://www.instagram.com/keysbycaleb/" target="_blank" rel="noopener noreferrer" class="footer-social-icon" title="Facebook"><i class="fab fa-facebook-f"></i> <span class="sr-only">Facebook</span></a>
+                    <a href="https://www.instagram.com/keysbycaleb/" target="_blank" rel="noopener noreferrer" class="footer-social-icon" title="Instagram"><i class="fab fa-instagram"></i> <span class="sr-only">Instagram</span></a>
+                    <a href="https://tiktok.com/@keys_by_caleb" target="_blank" rel="noopener noreferrer" class="footer-social-icon" title="TikTok"><i class="fab fa-tiktok"></i> <span class="sr-only">TikTok</span></a>
+                    <a href="youtube.com/@KeysByCaleb" target="_blank" rel="noopener noreferrer" class="footer-social-icon" title="YouTube"><i class="fab fa-youtube"></i> <span class="sr-only">YouTube</span></a>
+                    <a href="mailto:keysbycaleb@gmail.com" class="footer-social-icon" title="Email"><i class="fas fa-envelope"></i> <span class="sr-only">Email</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+</div> <button id="scroll-to-top" class="fixed bottom-6 right-6 bg-brand-primary text-white w-11 h-11 rounded-full shadow-lg hidden justify-center items-center hover:bg-brand-secondary transition-all duration-300 z-40 text-xl"><i class="fas fa-arrow-up"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/tsparticles-slim@2.12.0/tsparticles.slim.bundle.min.js"></script>
+<script src="js/main-new.js"></script>
+</body>
+</html>
