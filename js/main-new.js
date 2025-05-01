@@ -1,15 +1,18 @@
 /**
- * Main JavaScript for Keys by Caleb Website (V44 Base - Scroll End Detection)
+ * Main JavaScript for Keys by Caleb Website (V53 - Conditional Key Listener, No Video Hover)
  * Handles scroll-to-top, active nav highlighting, GSAP smooth scroll (links),
  * contact form (default HTML handling), tsParticles hero animation (Float Effect), footer copyright year.
- * Implements JS-driven section scrolling for Wheel/Trackpad and Keyboard on desktop using scroll end detection.
- * **Reverted to wheelScrollEndDelay logic.**
+ * Implements JS-driven section scrolling ONLY for Keyboard and Link Clicks on desktop index page.
+ * Removed wheel event hijacking to allow native trackpad/mouse wheel scrolling.
+ * Removed gallery video hover logic.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb NEW JS Initialized (V44 Base - Scroll End Detection).");
+    // Log script initialization with version
+    console.log("Keys by Caleb NEW JS Initialized (V53 - Conditional Key Listener, No Video Hover).");
 
     // --- GSAP Plugin Registration ---
+    // Ensure GSAP and ScrollToPlugin are loaded before registering
     if (typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined') {
         gsap.registerPlugin(ScrollToPlugin);
         console.log("GSAP ScrollToPlugin registered.");
@@ -19,119 +22,257 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- State Variables ---
-    let isAnimating = false;
-    let wheelTimeout;
-    let accumulatedDeltaY = 0;
+    let isAnimating = false; // Flag to prevent concurrent scroll animations for keyboard/links
 
     // --- Configuration ---
-    const wheelScrollEndDelay = 100; // Original delay value
-    console.log(`wheelScrollEndDelay set to: ${wheelScrollEndDelay}ms`);
-    const sectionScrollDuration = 0.7;
-    const sectionScrollEase = 'power2.inOut'; // Original ease
-    const linkScrollDuration = 1.0; // Duration for link clicks
+    const sectionScrollDuration = 0.7; // Duration of the section scroll animation (Keyboard/Links)
+    const sectionScrollEase = 'power2.inOut'; // Easing function for section scroll (Keyboard/Links)
+    const linkScrollDuration = 1.0; // Duration for link click scroll animation
     const linkScrollEase = 'power2.inOut'; // Ease for link clicks
-    const headerOffsetFactor = 0.05;
+    const headerOffsetFactor = 0.05; // Adjusts scroll target position relative to header height
 
     // --- Cache Elements ---
+    // Store frequently accessed DOM elements for performance
     const header = document.getElementById('main-header');
-    const scrollToTopButton = document.getElementById('scroll-to-top');
+    const scrollToTopButton = document.getElementById('scroll-to-top'); // Scroll button for index
     const internalLinks = document.querySelectorAll('a.internal-link[href^="#"], a.nav-link[href^="#"]:not([href="#"]), a.header-logo[href^="#"]');
     const headerNavLinks = document.querySelectorAll('#main-header nav a.nav-link:not(.booking-nav-link):not(.follow-button):not([title="Email Me"])');
     const bookingNavLink = document.querySelector('#main-header nav .booking-nav-link');
-    const contactForm = document.getElementById('contact-form');
+    const contactForm = document.getElementById('contact-form'); // Contact form on index
     const contactFormMessage = contactForm?.querySelector('#form-message');
     const contactSubmitButton = contactForm?.querySelector('#submit-button');
-    const mainSections = Array.from(document.querySelectorAll('.scroll-snap-container-home > main > section[id]'));
+    const scrollSnapContainer = document.querySelector('.scroll-snap-container-home'); // Desktop scroll container - MIGHT BE NULL
+    // Adjust section selector based on whether the container exists
+    const mainSections = Array.from(document.querySelectorAll(scrollSnapContainer ? '.scroll-snap-container-home > main > section[id]' : 'main > section[id]'));
     const footerElement = document.getElementById('main-footer');
+    // Combine main sections and footer into a single array for navigation targets
     const allNavTargets = [...mainSections, ...(footerElement ? [footerElement] : [])].filter(el => el.id);
-    const scrollSnapContainer = document.querySelector('.scroll-snap-container-home');
-    const currentYearSpan = document.getElementById('current-year');
-    const dateField = contactForm?.querySelector('#contact_event_date');
-    const particleContainerId = 'tsparticles-hero';
+    const currentYearSpan = document.getElementById('current-year'); // Footer year
+    const dateField = contactForm?.querySelector('#contact_event_date'); // Contact form date field
+    const particleContainerId = 'tsparticles-hero'; // ID for particle animation container
 
 
     // --- Helper Functions ---
-    const debounce = (func, wait) => { let timeout; return function executedFunction(...args) { const later = () => { clearTimeout(timeout); func.apply(this, args); }; clearTimeout(timeout); timeout = setTimeout(later, wait); }; };
-    const getHeaderHeight = () => header?.offsetHeight || 70;
+    // Debounce function to limit the rate at which a function can fire
+    const debounce = (func, wait) => {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func.apply(this, args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    };
+    // Get the current height of the fixed header
+    const getHeaderHeight = () => header?.offsetHeight || 70; // Default to 70 if header not found
+    // Check if desktop JS-driven scrolling should be active (REQUIRES the container)
     const isDesktopJsScrollActive = () => window.innerWidth >= 1024 && scrollSnapContainer;
+    // Determine the scroll target (window or the container) based on screen size AND container presence
     const getScrollTarget = () => isDesktopJsScrollActive() ? scrollSnapContainer : window;
-    const scrollIntoViewIfNeeded = (element) => { if (!element) return; const rect = element.getBoundingClientRect(); const headerHeight = getHeaderHeight(); const isAbove = rect.top < headerHeight + 10; const isBelow = rect.bottom > window.innerHeight - 10; if (isAbove || isBelow) { const elementTopRelativeToDocument = window.scrollY + rect.top; const targetScrollY = elementTopRelativeToDocument - headerHeight - 30; window.scrollTo({ top: targetScrollY, behavior: 'smooth' }); } };
+    // Scrolls an element into view if it's outside the viewport, considering the header
+    const scrollIntoViewIfNeeded = (element) => {
+        if (!element) return;
+        const rect = element.getBoundingClientRect();
+        const headerHeight = getHeaderHeight();
+        const isAbove = rect.top < headerHeight + 10; // Check if top is above header
+        const isBelow = rect.bottom > window.innerHeight - 10; // Check if bottom is below viewport
+        if (isAbove || isBelow) {
+            // Use window.scrollY because this function is likely for forms, not the main container scroll
+            const elementTopRelativeToDocument = window.pageYOffset + rect.top;
+            const targetScrollY = elementTopRelativeToDocument - headerHeight - 30; // Target position with offset
+            window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
+        }
+     };
 
 
     // --- tsParticles Initialization --- (Includes Float Effect Config)
-    const initParticles = () => { if (typeof tsParticles === 'undefined') { console.warn("tsParticles library not loaded."); return; } const particleContainer = document.getElementById(particleContainerId); if (particleContainer) { console.log("Initializing tsParticles for hero free float effect..."); tsParticles.load(particleContainerId, { fullScreen: { enable: false }, background: { color: { value: "transparent" } }, particles: { number: { value: 60, density: { enable: true, area: 800 } }, color: { value: "#ffffff" }, shape: { type: "circle" }, opacity: { value: { min: 0.1, max: 0.4 }, animation: { enable: true, speed: 0.8, minimumValue: 0.1, sync: false } }, size: { value: { min: 1, max: 3 } }, links: { enable: false }, move: { enable: true, speed: 1, direction: "none", random: true, straight: false, outModes: { default: "bounce" }, attract: { enable: false }, trail: { enable: false } } }, interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true, } }, detectRetina: true, }).then(c => console.log("tsParticles loaded.")).catch(e => console.error("tsParticles load error:", e)); } else { console.warn("Particle container #" + particleContainerId + " not found."); } };
+    // Initializes the particle animation in the hero section if the library is loaded and container exists
+    const initParticles = () => {
+        const particleContainer = document.getElementById(particleContainerId);
+        if (typeof tsParticles === 'undefined' || !particleContainer) {
+            if (!particleContainer) console.log("Particle container not found, skipping init.");
+            else console.warn("tsParticles library not loaded.");
+            return;
+        }
+
+        console.log("Initializing tsParticles for hero free float effect...");
+        tsParticles.load(particleContainerId, {
+            fullScreen: { enable: false }, // Don't cover the whole screen
+            background: { color: { value: "transparent" } },
+            particles: {
+                number: { value: 60, density: { enable: true, area: 800 } }, // Particle density
+                color: { value: "#ffffff" }, // Particle color
+                shape: { type: "circle" }, // Particle shape
+                opacity: { value: { min: 0.1, max: 0.4 }, animation: { enable: true, speed: 0.8, minimumValue: 0.1, sync: false } }, // Fading opacity
+                size: { value: { min: 1, max: 3 } }, // Particle size range
+                links: { enable: false }, // No lines connecting particles
+                move: {
+                    enable: true, speed: 1, direction: "none", // Movement speed and direction
+                    random: true, straight: false, outModes: { default: "bounce" }, // Random movement, bounce off edges
+                    attract: { enable: false }, trail: { enable: false }
+                }
+            },
+            interactivity: {
+                detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true, } // No interaction on hover/click
+            },
+            detectRetina: true, // Adjust for high-DPI screens
+        }).then(c => console.log("tsParticles loaded.")).catch(e => console.error("tsParticles load error:", e));
+     };
 
     // --- Event Logic ---
 
-    const handleScrollToTopVisibility = () => { /* ... same ... */ const scrollTarget = getScrollTarget(); const scrollY = (scrollTarget === window) ? window.scrollY : scrollTarget.scrollTop; if (!scrollToTopButton) return; if (scrollY > 300) { scrollToTopButton?.classList.remove('hidden'); requestAnimationFrame(() => { scrollToTopButton?.classList.add('visible'); }); } else { if (scrollToTopButton?.classList.contains('visible')) { scrollToTopButton.classList.remove('visible'); setTimeout(() => { const currentScrollYCheck = (scrollTarget === window) ? window.scrollY : scrollTarget.scrollTop; if (currentScrollYCheck <= 300 && !scrollToTopButton.classList.contains('visible')) { scrollToTopButton.classList.add('hidden'); } }, 300); } else if (!scrollToTopButton?.classList.contains('hidden')) { scrollToTopButton.classList.add('hidden'); } } };
+    // Shows/hides the scroll-to-top button based on scroll position
+    const handleScrollToTopVisibility = () => {
+        const scrollTarget = getScrollTarget();
+        // Use pageYOffset for window, scrollTop for container
+        const scrollY = (scrollTarget === window) ? window.pageYOffset : scrollTarget.scrollTop;
+        if (!scrollToTopButton) return; // Only proceed if the button exists on this page
 
-    // Animate scroll with GSAP (Wrapper function used by all programmatic scrolls)
+        if (scrollY > 300) { // Show button if scrolled down > 300px
+            scrollToTopButton.classList.remove('hidden');
+            requestAnimationFrame(() => { // Ensure visibility transition works
+                scrollToTopButton.classList.add('visible');
+            });
+        } else { // Hide button if near the top
+            if (scrollToTopButton.classList.contains('visible')) {
+                scrollToTopButton.classList.remove('visible');
+                // Add a delay before adding 'hidden' to allow fade-out transition
+                setTimeout(() => {
+                    const currentScrollYCheck = (scrollTarget === window) ? window.pageYOffset : scrollTarget.scrollTop;
+                    if (currentScrollYCheck <= 300 && !scrollToTopButton.classList.contains('visible')) {
+                        scrollToTopButton.classList.add('hidden');
+                    }
+                }, 300); // Match transition duration
+            } else if (!scrollToTopButton.classList.contains('hidden')) {
+                 // Ensure it's hidden initially or if scrolled up quickly
+                scrollToTopButton.classList.add('hidden');
+            }
+        }
+     };
+
+    // Animate scroll with GSAP (Wrapper function used by programmatic scrolls like keyboard/links)
+    // Handles the actual scrolling animation and manages the isAnimating flag
     const animateScroll = (target, duration, params) => {
-        const ease = params.ease || sectionScrollEase; // Default to section ease
+        const ease = params.ease || sectionScrollEase; // Use provided ease or default
         // console.log(`AnimateScroll START - Y: ${params?.scrollTo?.y?.toFixed(0)}, Ease: ${ease}`);
         if (isAnimating) {
              // console.warn("AnimateScroll BLOCKED - already animating.");
-             return;
+             return; // Prevent starting a new animation if one is running
         }
-        isAnimating = true;
+        isAnimating = true; // Set animating flag immediately
 
-        // Remove listeners temporarily
+        // Temporarily remove key listener during animation to prevent interference
+        // Only remove if desktop JS scroll is active (where key listener is added)
         if (isDesktopJsScrollActive()) {
-             scrollSnapContainer?.removeEventListener('wheel', handleWheel);
              window.removeEventListener('keydown', handleKeyDown);
         }
 
+        // GSAP animation
         gsap.to(target, {
             duration: duration,
-            scrollTo: params.scrollTo,
+            scrollTo: params.scrollTo, // Scroll target position
             ease: ease,
-            overwrite: 'auto', // Use 'auto' for this logic
-            onComplete: () => {
+            overwrite: 'auto', // Automatically handle conflicting animations
+            onComplete: () => { // When animation finishes
                 // console.log("AnimateScroll COMPLETE.");
-                isAnimating = false;
-                accumulatedDeltaY = 0; // Reset accumulator
-                // Re-attach listeners after delay (original V44 approach)
-                if (isDesktopJsScrollActive()) {
-                    setTimeout(() => {
-                        scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
-                        window.addEventListener('keydown', handleKeyDown);
-                    }, 100); // Original delay
-                }
-                params.onComplete?.();
-            },
-            onInterrupt: () => {
-                // console.error(">>> GSAP AnimateScroll INTERRUPTED.");
-                isAnimating = false;
-                accumulatedDeltaY = 0; // Reset accumulator
-                 // Re-attach listeners immediately
+                isAnimating = false; // Reset animation flag
+                // Re-attach key listener after animation completes
                  if (isDesktopJsScrollActive()) {
-                     scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
                      window.addEventListener('keydown', handleKeyDown);
                  }
-                params.onInterrupt?.();
+                params.onComplete?.(); // Call any provided callback
+            },
+            onInterrupt: () => { // If animation is interrupted (e.g., by user scroll)
+                // console.error(">>> GSAP AnimateScroll INTERRUPTED.");
+                 isAnimating = false; // Reset animation flag immediately
+                 // Re-attach key listener immediately on interrupt
+                 if (isDesktopJsScrollActive()) {
+                     window.addEventListener('keydown', handleKeyDown);
+                 }
+                params.onInterrupt?.(); // Call any provided callback
             }
         });
     };
 
-     // Helper to calculate the consistent target Y
-     const calculateConsistentTargetY = (targetElement) => { /* ... same ... */ if (!targetElement) return 0; if (targetElement.id === 'hero') return 0; const headerHeight = getHeaderHeight(); let targetScrollY = targetElement.offsetTop - (headerHeight * headerOffsetFactor); return Math.max(0, targetScrollY); };
+     // Helper to calculate the consistent target Y position for a section, accounting for header
+     // Only relevant for desktop container scrolling
+     const calculateConsistentTargetY = (targetElement) => {
+         if (!targetElement || !scrollSnapContainer) return 0; // Need container for offsetTop
+         if (targetElement.id === 'hero') return 0; // Hero section is always at the top
+         const headerHeight = getHeaderHeight();
+         // Calculate target position slightly above the element's top relative to the container
+         let targetScrollY = targetElement.offsetTop - (headerHeight * headerOffsetFactor);
+         return Math.max(0, targetScrollY); // Ensure target isn't negative
+     };
 
-     // Helper to find the currently 'active' section index
-     const getCurrentSectionIndex = () => { /* ... same ... */ if (!scrollSnapContainer) return 0; const scrollPosition = scrollSnapContainer.scrollTop; const viewportHeight = scrollSnapContainer.clientHeight; let bestMatchIndex = 0; let minDistance = Infinity; allNavTargets.forEach((section, index) => { const targetPos = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - targetPos); if (distance < minDistance) { minDistance = distance; bestMatchIndex = index; } }); if (scrollPosition + viewportHeight >= scrollSnapContainer.scrollHeight - 20) { bestMatchIndex = allNavTargets.length - 1; } return bestMatchIndex; };
+     // Helper to find the index of the section currently considered 'active' based on scroll position
+     // This needs to work for BOTH window and container scrolling for nav highlighting
+     const getCurrentSectionIndex = () => {
+        const scrollTarget = getScrollTarget();
+        const scrollPosition = (scrollTarget === window) ? window.pageYOffset : scrollTarget.scrollTop;
+        const viewportHeight = (scrollTarget === window) ? window.innerHeight : scrollTarget.clientHeight;
+        const scrollHeight = (scrollTarget === window) ? document.body.scrollHeight : scrollTarget.scrollHeight;
 
-    // GSAP Smooth Scrolling for Internal Links using animateScroll wrapper
+        let bestMatchIndex = 0;
+        let minDistance = Infinity;
+
+        // Find the section whose calculated target position is closest to the current scroll position
+        allNavTargets.forEach((section, index) => {
+            // Calculate target based on container offset if desktop, otherwise window offset
+            let targetPos;
+            if (isDesktopJsScrollActive()) {
+                 targetPos = calculateConsistentTargetY(section);
+            } else {
+                 // Estimate position for window scroll (less precise but needed for nav highlight)
+                 targetPos = Math.max(0, section.offsetTop - getHeaderHeight()); // Simple offset from top of document
+            }
+
+            const distance = Math.abs(scrollPosition - targetPos);
+            if (distance < minDistance) {
+                minDistance = distance;
+                bestMatchIndex = index;
+            }
+        });
+
+        // Special case: If scrolled very close to the bottom, consider the last target active
+        if (scrollPosition + viewportHeight >= scrollHeight - 50) {
+             // Ensure allNavTargets is not empty before accessing the last element
+            if (allNavTargets.length > 0) {
+                 bestMatchIndex = allNavTargets.length - 1;
+            }
+        }
+        return bestMatchIndex;
+     };
+
+
+    // GSAP Smooth Scrolling for Internal Links (e.g., nav links, buttons)
     internalLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             const href = link.getAttribute('href');
+            // Check if it's an internal hash link
             if (href && href.startsWith('#') && href.length > 1) {
                  const targetId = href.substring(1);
                  const targetElement = document.getElementById(targetId);
                  if (!targetElement) { console.warn(`Target element not found for ID: ${targetId}`); return; }
-                 e.preventDefault();
-                 const scrollTarget = getScrollTarget();
+
+                 e.preventDefault(); // Prevent default jump link behavior
+                 const scrollTarget = getScrollTarget(); // Get window or container
                  const desktopScroll = isDesktopJsScrollActive();
-                 let targetScrollY = desktopScroll ? calculateConsistentTargetY(targetElement) : Math.max(0, targetElement.offsetTop - getHeaderHeight());
-                 // Use specific link ease for links
+
+                 // Calculate target Y position differently for desktop container vs window scroll
+                 let targetScrollY;
+                 if (desktopScroll) {
+                     targetScrollY = calculateConsistentTargetY(targetElement);
+                 } else {
+                     // Calculate offset relative to the document for window scrolling
+                     const elementRect = targetElement.getBoundingClientRect();
+                     const absoluteElementTop = elementRect.top + window.pageYOffset;
+                     targetScrollY = Math.max(0, absoluteElementTop - getHeaderHeight());
+                 }
+
+                 // Use the animateScroll wrapper with specific link settings
                  animateScroll(scrollTarget, linkScrollDuration, { scrollTo: { y: targetScrollY }, ease: linkScrollEase });
              }
         });
@@ -139,376 +280,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Scroll-to-Top Button Click (Uses animateScroll wrapper)
-    scrollToTopButton?.addEventListener('click', () => {
-        const scrollTarget = getScrollTarget();
-        // Use link ease for scroll-to-top as well
-        animateScroll(scrollTarget, linkScrollDuration, { scrollTo: 0, ease: linkScrollEase });
-     });
-
-    // Active Navigation Link Highlighting
-    const handleActiveNav = () => { /* ... same logic ... */ let currentSectionId = 'hero'; const headerHeight = getHeaderHeight(); const scrollTarget = getScrollTarget(); const scrollPosition = (scrollTarget === window) ? window.scrollY : scrollTarget.scrollTop; const scrollTargetElement = (scrollTarget === window) ? document.documentElement : scrollTarget; if (!scrollTargetElement) return; const viewportHeight = scrollTargetElement.clientHeight || window.innerHeight; const scrollHeight = scrollTargetElement.scrollHeight || document.body.scrollHeight; let bestMatch = { id: 'hero', distance: Infinity }; allNavTargets.forEach((section) => { const activationPoint = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - activationPoint); if (scrollPosition >= activationPoint - viewportHeight * 0.7 && scrollPosition < activationPoint + viewportHeight * 0.3) { if (distance < bestMatch.distance) { bestMatch = { id: section.id, distance: distance }; } } else { const idealAlignmentPoint = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - idealAlignmentPoint); if (distance < bestMatch.distance) { bestMatch = { id: section.id, distance: distance }; } } }); currentSectionId = bestMatch.id; if (scrollPosition + viewportHeight >= scrollHeight - 50) { const lastElement = allNavTargets[allNavTargets.length - 1]; if (lastElement && lastElement.id) { currentSectionId = lastElement.id; if (currentSectionId === 'main-footer') currentSectionId = 'contact'; } } else if (scrollPosition < headerHeight * 0.5) { currentSectionId = 'hero'; } headerNavLinks.forEach(link => { link.classList.remove('active'); const linkHref = link.getAttribute('href'); if (linkHref === `#${currentSectionId}`) { link.classList.add('active'); } }); };
-
-
-    // --- JS Wheel & Keyboard Navigation Logic --- (Scroll End Detection)
-
-    // Function called after wheel timeout
-    const handleWheelScrollEnd = () => {
-        if (isAnimating) {
-            accumulatedDeltaY = 0; return;
-        }
-        const direction = accumulatedDeltaY > 0 ? 1 : -1;
-        accumulatedDeltaY = 0; // Reset accumulator
-
-        const currentIndex = getCurrentSectionIndex();
-        let targetIndex = currentIndex + direction;
-        targetIndex = Math.max(0, Math.min(targetIndex, allNavTargets.length - 1));
-
-        if (targetIndex !== currentIndex) {
-            const targetSection = allNavTargets[targetIndex];
-            if (targetSection && targetSection.id) {
-                const targetScrollY = calculateConsistentTargetY(targetSection);
-                animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY } });
-            }
-        }
-    };
-
-    // Handles wheel events, sets timeout
-    const handleWheel = (event) => {
-        if (!isDesktopJsScrollActive()) return;
-
-        if (Math.abs(event.deltaY) > 0) {
-             if (!isAnimating) {
-                event.preventDefault();
-                accumulatedDeltaY += event.deltaY;
-                 // Reset timeout on each wheel event while not animating
-                clearTimeout(wheelTimeout);
-                wheelTimeout = setTimeout(handleWheelScrollEnd, wheelScrollEndDelay);
-             } else {
-                // Prevent default scroll during animation but don't interfere with timeout/accumulation
-                event.preventDefault();
-             }
-        }
-    };
-
-
-    const handleKeyDown = (event) => { // Keyboard logic remains largely the same
-        if (!isDesktopJsScrollActive()) return;
-        const activeElement = document.activeElement;
-        const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT');
-
-        if (isInputFocused && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
-            return;
-        }
-        if (isAnimating) {
-            return; // Ignore key presses during animation
-        }
-
-        // Clear any pending wheel scroll timeout if key is pressed
-        clearTimeout(wheelTimeout);
-        accumulatedDeltaY = 0;
-
-        let direction = 0;
-        if (event.key === 'ArrowDown') direction = 1;
-        else if (event.key === 'ArrowUp') direction = -1;
-        else { return; }
-
-        const currentIndex = getCurrentSectionIndex();
-        let targetIndex = currentIndex + direction;
-        targetIndex = Math.max(0, Math.min(targetIndex, allNavTargets.length - 1));
-
-        if (targetIndex !== currentIndex) {
-            event.preventDefault();
-            const targetSection = allNavTargets[targetIndex];
-            if (targetSection && targetSection.id) {
-                const targetScrollY = calculateConsistentTargetY(targetSection);
-                // Use section ease for keyboard nav too
-                animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY } });
-            }
-        }
-    };
-
-
-    // --- Contact Form Validation & Submission --- (Default handling)
-     const validateContactField = (field) => { /* ... V38 basic validation ... */ let isValid = true; const errorElement = contactForm?.querySelector(`.error-message[data-for="${field.name}"]`); const value = field.value.trim(); field.classList.remove('input-error'); if (errorElement) errorElement.style.display = 'none'; if (field.required && !value) { isValid = false; } else if (field.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { isValid = false; if(errorElement) errorElement.textContent = "A valid email is required."; } else if (field.type === 'date' && value) { try { const d = new Date(value + 'T00:00:00'), t = new Date(); t.setHours(0,0,0,0); if (isNaN(d.getTime()) || d < t) isValid = false; if(errorElement && !isValid) errorElement.textContent = "Date must be today or later"; } catch { isValid = false; if(errorElement) errorElement.textContent = "Invalid date";} } if (!isValid && errorElement) { if(!errorElement.textContent) errorElement.textContent = "Required"; errorElement.style.display = 'block'; field.classList.add('input-error'); } return isValid; };
-    contactForm?.addEventListener('submit', (e) => { console.log("Contact form submit triggered (Default Handling)."); let isFormValid = true; const formMsgElement = contactForm?.querySelector('#form-message'); if (formMsgElement) formMsgElement.classList.add('hidden'); contactForm.querySelectorAll('[required]').forEach(field => { if (!validateContactField(field)) { isFormValid = false; } }); if (!isFormValid) { console.log("Contact form validation failed. Preventing default submission."); e.preventDefault(); // Keep preventDefault for invalid forms
-         // Show general error message or alert
-         alert("Please fill out all required fields correctly.");
-         const firstError = contactForm.querySelector('.input-error');
-         firstError?.focus();
-         scrollIntoViewIfNeeded(firstError?.closest('.input-group') || firstError); } else { console.log("Contact form valid. Allowing default HTML/Netlify submission."); const submitBtn = contactForm.querySelector('#submit-button'); if(submitBtn) submitBtn.disabled = true; /* Let Netlify handle it */ } });
-     contactForm?.querySelectorAll('input[required], textarea[required]').forEach(field => { field.addEventListener('blur', () => validateContactField(field)); });
-
-
-    // --- Footer Year & Min Date ---
-    if (currentYearSpan) { currentYearSpan.textContent = new Date().getFullYear(); }
-    if (dateField) { try { const today = new Date(); const year = today.getFullYear(); const mm = String(today.getMonth() + 1).padStart(2, '0'); const dd = String(today.getDate()).padStart(2, '0'); dateField.min = `${year}-${mm}-${dd}`; } catch (e) { console.error("Error setting min date for contact form:", e); } }
-
-
-    // --- Initial Calls & Event Listeners Setup ---
-    initParticles(); // Initialize particles!
-
-    const debouncedNavHandler = debounce(handleActiveNav, 50);
-    const debouncedScrollToTopHandler = debounce(handleScrollToTopVisibility, 50);
-    const setupScrollListeners = () => {
-        const currentScrollTarget = getScrollTarget();
-        // Remove potentially old listeners first
-        window.removeEventListener('scroll', debouncedNavHandler);
-        window.removeEventListener('scroll', debouncedScrollToTopHandler);
-        window.removeEventListener('keydown', handleKeyDown);
-        scrollSnapContainer?.removeEventListener('scroll', debouncedNavHandler);
-        scrollSnapContainer?.removeEventListener('scroll', debouncedScrollToTopHandler);
-        scrollSnapContainer?.removeEventListener('wheel', handleWheel);
-        // Add appropriate listeners
-        if (currentScrollTarget === window) {
-            window.addEventListener('scroll', debouncedNavHandler, { passive: true });
-            window.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true });
-            window.addEventListener('keydown', handleKeyDown);
-        } else {
-            scrollSnapContainer.addEventListener('scroll', debouncedNavHandler, { passive: true });
-            scrollSnapContainer.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true });
-            scrollSnapContainer.addEventListener('wheel', handleWheel, { passive: false });
-            window.addEventListener('keydown', handleKeyDown);
-        }
-    };
-    setupScrollListeners();
-    handleScrollToTopVisibility();
-    setTimeout(handleActiveNav, 150); // Initial nav check
-    window.addEventListener('resize', debounce(() => {
-         setupScrollListeners();
-         handleActiveNav();
-         handleScrollToTopVisibility();
-     }, 250));
-    // Listener for scroll-to-top uses animateScroll wrapper now
-    scrollToTopButton?.addEventListener('click', () => {
-        const scrollTarget = getScrollTarget();
-        animateScroll(scrollTarget, linkScrollDuration, { scrollTo: 0, ease: linkScrollEase });
-     });
-
-}); // End DOMContentLoaded
-/**
- * Main JavaScript for Keys by Caleb Website (V44 Base - Scroll End Detection)
- * Handles scroll-to-top, active nav highlighting, GSAP smooth scroll (links),
- * contact form (default HTML handling), tsParticles hero animation (Float Effect), footer copyright year.
- * Implements JS-driven section scrolling for Wheel/Trackpad and Keyboard on desktop using scroll end detection.
- * **Reverted to wheelScrollEndDelay logic.**
- */
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb NEW JS Initialized (V44 Base - Scroll End Detection).");
-
-    // --- GSAP Plugin Registration ---
-    if (typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined') {
-        gsap.registerPlugin(ScrollToPlugin);
-        console.log("GSAP ScrollToPlugin registered.");
-    } else {
-        console.error("GSAP or ScrollToPlugin not loaded! Smooth scroll will not work.");
+    // Only add listener if the button actually exists on this page
+    if (scrollToTopButton) {
+        scrollToTopButton.addEventListener('click', () => {
+            const scrollTarget = getScrollTarget();
+            // Use link animation settings for scroll-to-top
+            animateScroll(scrollTarget, linkScrollDuration, { scrollTo: 0, ease: linkScrollEase });
+         });
     }
 
 
-    // --- State Variables ---
-    let isAnimating = false;
-    let wheelTimeout;
-    let accumulatedDeltaY = 0;
+    // Active Navigation Link Highlighting based on scroll position
+    const handleActiveNav = () => {
+        // Find the best matching section index first
+        const currentSectionIndex = getCurrentSectionIndex();
+        let currentSectionId = allNavTargets[currentSectionIndex]?.id || 'hero'; // Default to hero if no match
 
-    // --- Configuration ---
-    const wheelScrollEndDelay = 200; // Original delay value
-    console.log(`wheelScrollEndDelay set to: ${wheelScrollEndDelay}ms`);
-    const sectionScrollDuration = 0.7;
-    const sectionScrollEase = 'power2.inOut'; // Original ease
-    const linkScrollDuration = 1.0; // Duration for link clicks
-    const linkScrollEase = 'power2.inOut'; // Ease for link clicks
-    const headerOffsetFactor = 0.05;
-
-    // --- Cache Elements ---
-    const header = document.getElementById('main-header');
-    const scrollToTopButton = document.getElementById('scroll-to-top');
-    const internalLinks = document.querySelectorAll('a.internal-link[href^="#"], a.nav-link[href^="#"]:not([href="#"]), a.header-logo[href^="#"]');
-    const headerNavLinks = document.querySelectorAll('#main-header nav a.nav-link:not(.booking-nav-link):not(.follow-button):not([title="Email Me"])');
-    const bookingNavLink = document.querySelector('#main-header nav .booking-nav-link');
-    const contactForm = document.getElementById('contact-form');
-    const contactFormMessage = contactForm?.querySelector('#form-message');
-    const contactSubmitButton = contactForm?.querySelector('#submit-button');
-    const mainSections = Array.from(document.querySelectorAll('.scroll-snap-container-home > main > section[id]'));
-    const footerElement = document.getElementById('main-footer');
-    const allNavTargets = [...mainSections, ...(footerElement ? [footerElement] : [])].filter(el => el.id);
-    const scrollSnapContainer = document.querySelector('.scroll-snap-container-home');
-    const currentYearSpan = document.getElementById('current-year');
-    const dateField = contactForm?.querySelector('#contact_event_date');
-    const particleContainerId = 'tsparticles-hero';
-
-
-    // --- Helper Functions ---
-    const debounce = (func, wait) => { let timeout; return function executedFunction(...args) { const later = () => { clearTimeout(timeout); func.apply(this, args); }; clearTimeout(timeout); timeout = setTimeout(later, wait); }; };
-    const getHeaderHeight = () => header?.offsetHeight || 70;
-    const isDesktopJsScrollActive = () => window.innerWidth >= 1024 && scrollSnapContainer;
-    const getScrollTarget = () => isDesktopJsScrollActive() ? scrollSnapContainer : window;
-    const scrollIntoViewIfNeeded = (element) => { if (!element) return; const rect = element.getBoundingClientRect(); const headerHeight = getHeaderHeight(); const isAbove = rect.top < headerHeight + 10; const isBelow = rect.bottom > window.innerHeight - 10; if (isAbove || isBelow) { const elementTopRelativeToDocument = window.scrollY + rect.top; const targetScrollY = elementTopRelativeToDocument - headerHeight - 30; window.scrollTo({ top: targetScrollY, behavior: 'smooth' }); } };
-
-
-    // --- tsParticles Initialization --- (Includes Float Effect Config)
-    const initParticles = () => { if (typeof tsParticles === 'undefined') { console.warn("tsParticles library not loaded."); return; } const particleContainer = document.getElementById(particleContainerId); if (particleContainer) { console.log("Initializing tsParticles for hero free float effect..."); tsParticles.load(particleContainerId, { fullScreen: { enable: false }, background: { color: { value: "transparent" } }, particles: { number: { value: 60, density: { enable: true, area: 800 } }, color: { value: "#ffffff" }, shape: { type: "circle" }, opacity: { value: { min: 0.1, max: 0.4 }, animation: { enable: true, speed: 0.8, minimumValue: 0.1, sync: false } }, size: { value: { min: 1, max: 3 } }, links: { enable: false }, move: { enable: true, speed: 1, direction: "none", random: true, straight: false, outModes: { default: "bounce" }, attract: { enable: false }, trail: { enable: false } } }, interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true, } }, detectRetina: true, }).then(c => console.log("tsParticles loaded.")).catch(e => console.error("tsParticles load error:", e)); } else { console.warn("Particle container #" + particleContainerId + " not found."); } };
-
-    // --- Event Logic ---
-
-    const handleScrollToTopVisibility = () => { /* ... same ... */ const scrollTarget = getScrollTarget(); const scrollY = (scrollTarget === window) ? window.scrollY : scrollTarget.scrollTop; if (!scrollToTopButton) return; if (scrollY > 300) { scrollToTopButton?.classList.remove('hidden'); requestAnimationFrame(() => { scrollToTopButton?.classList.add('visible'); }); } else { if (scrollToTopButton?.classList.contains('visible')) { scrollToTopButton.classList.remove('visible'); setTimeout(() => { const currentScrollYCheck = (scrollTarget === window) ? window.scrollY : scrollTarget.scrollTop; if (currentScrollYCheck <= 300 && !scrollToTopButton.classList.contains('visible')) { scrollToTopButton.classList.add('hidden'); } }, 300); } else if (!scrollToTopButton?.classList.contains('hidden')) { scrollToTopButton.classList.add('hidden'); } } };
-
-    // Animate scroll with GSAP (Wrapper function used by all programmatic scrolls)
-    const animateScroll = (target, duration, params) => {
-        const ease = params.ease || sectionScrollEase; // Default to section ease
-        // console.log(`AnimateScroll START - Y: ${params?.scrollTo?.y?.toFixed(0)}, Ease: ${ease}`);
-        if (isAnimating) {
-             // console.warn("AnimateScroll BLOCKED - already animating.");
-             return;
-        }
-        isAnimating = true;
-
-        // Remove listeners temporarily
-        if (isDesktopJsScrollActive()) {
-             scrollSnapContainer?.removeEventListener('wheel', handleWheel);
-             window.removeEventListener('keydown', handleKeyDown);
-        }
-
-        gsap.to(target, {
-            duration: duration,
-            scrollTo: params.scrollTo,
-            ease: ease,
-            overwrite: 'auto', // Use 'auto' for this logic
-            onComplete: () => {
-                // console.log("AnimateScroll COMPLETE.");
-                isAnimating = false;
-                accumulatedDeltaY = 0; // Reset accumulator
-                // Re-attach listeners after delay (original V44 approach)
-                if (isDesktopJsScrollActive()) {
-                    setTimeout(() => {
-                        scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
-                        window.addEventListener('keydown', handleKeyDown);
-                    }, 100); // Original delay
-                }
-                params.onComplete?.();
-            },
-            onInterrupt: () => {
-                // console.error(">>> GSAP AnimateScroll INTERRUPTED.");
-                isAnimating = false;
-                accumulatedDeltaY = 0; // Reset accumulator
-                 // Re-attach listeners immediately
-                 if (isDesktopJsScrollActive()) {
-                     scrollSnapContainer?.addEventListener('wheel', handleWheel, { passive: false });
-                     window.addEventListener('keydown', handleKeyDown);
-                 }
-                params.onInterrupt?.();
-            }
-        });
-    };
-
-     // Helper to calculate the consistent target Y
-     const calculateConsistentTargetY = (targetElement) => { /* ... same ... */ if (!targetElement) return 0; if (targetElement.id === 'hero') return 0; const headerHeight = getHeaderHeight(); let targetScrollY = targetElement.offsetTop - (headerHeight * headerOffsetFactor); return Math.max(0, targetScrollY); };
-
-     // Helper to find the currently 'active' section index
-     const getCurrentSectionIndex = () => { /* ... same ... */ if (!scrollSnapContainer) return 0; const scrollPosition = scrollSnapContainer.scrollTop; const viewportHeight = scrollSnapContainer.clientHeight; let bestMatchIndex = 0; let minDistance = Infinity; allNavTargets.forEach((section, index) => { const targetPos = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - targetPos); if (distance < minDistance) { minDistance = distance; bestMatchIndex = index; } }); if (scrollPosition + viewportHeight >= scrollSnapContainer.scrollHeight - 20) { bestMatchIndex = allNavTargets.length - 1; } return bestMatchIndex; };
-
-    // GSAP Smooth Scrolling for Internal Links using animateScroll wrapper
-    internalLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            const href = link.getAttribute('href');
-            if (href && href.startsWith('#') && href.length > 1) {
-                 const targetId = href.substring(1);
-                 const targetElement = document.getElementById(targetId);
-                 if (!targetElement) { console.warn(`Target element not found for ID: ${targetId}`); return; }
-                 e.preventDefault();
-                 const scrollTarget = getScrollTarget();
-                 const desktopScroll = isDesktopJsScrollActive();
-                 let targetScrollY = desktopScroll ? calculateConsistentTargetY(targetElement) : Math.max(0, targetElement.offsetTop - getHeaderHeight());
-                 // Use specific link ease for links
-                 animateScroll(scrollTarget, linkScrollDuration, { scrollTo: { y: targetScrollY }, ease: linkScrollEase });
-             }
-        });
-    });
-
-
-    // Scroll-to-Top Button Click (Uses animateScroll wrapper)
-    scrollToTopButton?.addEventListener('click', () => {
+        // Refine based on edge cases (top/bottom)
         const scrollTarget = getScrollTarget();
-        // Use link ease for scroll-to-top as well
-        animateScroll(scrollTarget, linkScrollDuration, { scrollTo: 0, ease: linkScrollEase });
-     });
+        const scrollPosition = (scrollTarget === window) ? window.pageYOffset : scrollTarget.scrollTop;
+        const headerHeight = getHeaderHeight();
+        const scrollTargetElement = (scrollTarget === window) ? document.documentElement : scrollTarget;
+        if (!scrollTargetElement) return;
+        const viewportHeight = scrollTargetElement.clientHeight || window.innerHeight;
+        const scrollHeight = scrollTargetElement.scrollHeight || document.body.scrollHeight;
 
-    // Active Navigation Link Highlighting
-    const handleActiveNav = () => { /* ... same logic ... */ let currentSectionId = 'hero'; const headerHeight = getHeaderHeight(); const scrollTarget = getScrollTarget(); const scrollPosition = (scrollTarget === window) ? window.scrollY : scrollTarget.scrollTop; const scrollTargetElement = (scrollTarget === window) ? document.documentElement : scrollTarget; if (!scrollTargetElement) return; const viewportHeight = scrollTargetElement.clientHeight || window.innerHeight; const scrollHeight = scrollTargetElement.scrollHeight || document.body.scrollHeight; let bestMatch = { id: 'hero', distance: Infinity }; allNavTargets.forEach((section) => { const activationPoint = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - activationPoint); if (scrollPosition >= activationPoint - viewportHeight * 0.7 && scrollPosition < activationPoint + viewportHeight * 0.3) { if (distance < bestMatch.distance) { bestMatch = { id: section.id, distance: distance }; } } else { const idealAlignmentPoint = calculateConsistentTargetY(section); const distance = Math.abs(scrollPosition - idealAlignmentPoint); if (distance < bestMatch.distance) { bestMatch = { id: section.id, distance: distance }; } } }); currentSectionId = bestMatch.id; if (scrollPosition + viewportHeight >= scrollHeight - 50) { const lastElement = allNavTargets[allNavTargets.length - 1]; if (lastElement && lastElement.id) { currentSectionId = lastElement.id; if (currentSectionId === 'main-footer') currentSectionId = 'contact'; } } else if (scrollPosition < headerHeight * 0.5) { currentSectionId = 'hero'; } headerNavLinks.forEach(link => { link.classList.remove('active'); const linkHref = link.getAttribute('href'); if (linkHref === `#${currentSectionId}`) { link.classList.add('active'); } }); };
-
-
-    // --- JS Wheel & Keyboard Navigation Logic --- (Scroll End Detection)
-
-    // Function called after wheel timeout
-    const handleWheelScrollEnd = () => {
-        if (isAnimating) {
-            accumulatedDeltaY = 0; return;
-        }
-        const direction = accumulatedDeltaY > 0 ? 1 : -1;
-        accumulatedDeltaY = 0; // Reset accumulator
-
-        const currentIndex = getCurrentSectionIndex();
-        let targetIndex = currentIndex + direction;
-        targetIndex = Math.max(0, Math.min(targetIndex, allNavTargets.length - 1));
-
-        if (targetIndex !== currentIndex) {
-            const targetSection = allNavTargets[targetIndex];
-            if (targetSection && targetSection.id) {
-                const targetScrollY = calculateConsistentTargetY(targetSection);
-                animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY } });
+        if (scrollPosition + viewportHeight >= scrollHeight - 50) {
+            const lastElement = allNavTargets[allNavTargets.length - 1];
+            if (lastElement && lastElement.id) {
+                currentSectionId = lastElement.id;
+                // Map footer ID to contact section ID for highlighting
+                if (currentSectionId === 'main-footer') currentSectionId = 'contact';
             }
+        } else if (scrollPosition < headerHeight * 0.5) {
+            currentSectionId = 'hero';
         }
-    };
+        // else use the index found earlier
 
-    // Handles wheel events, sets timeout
-    const handleWheel = (event) => {
-        if (!isDesktopJsScrollActive()) return;
+        // Update active class on header navigation links
+        headerNavLinks.forEach(link => {
+            link.classList.remove('active');
+            const linkHref = link.getAttribute('href');
+            if (linkHref === `#${currentSectionId}`) {
+                link.classList.add('active');
+            }
+        });
+     };
 
-        if (Math.abs(event.deltaY) > 0) {
-             if (!isAnimating) {
-                event.preventDefault();
-                accumulatedDeltaY += event.deltaY;
-                 // Reset timeout on each wheel event while not animating
-                clearTimeout(wheelTimeout);
-                wheelTimeout = setTimeout(handleWheelScrollEnd, wheelScrollEndDelay);
-             } else {
-                // Prevent default scroll during animation but don't interfere with timeout/accumulation
-                event.preventDefault();
-             }
+
+    // --- JS Keyboard Navigation Logic --- (Wheel logic removed)
+
+    // Handles keyboard navigation (ArrowUp/ArrowDown) - Snaps to sections ONLY ON DESKTOP VIEW
+    const handleKeyDown = (event) => {
+        // Only run if desktop scrolling is active (container exists) and not currently animating
+        if (!isDesktopJsScrollActive() || isAnimating) {
+            return;
         }
-    };
-
-
-    const handleKeyDown = (event) => { // Keyboard logic remains largely the same
-        if (!isDesktopJsScrollActive()) return;
         const activeElement = document.activeElement;
+        // Ignore arrow keys if focus is within a form input/textarea/select
         const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT');
 
         if (isInputFocused && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
-            return;
+            return; // Allow default arrow key behavior in form fields
         }
-        if (isAnimating) {
-            return; // Ignore key presses during animation
-        }
-
-        // Clear any pending wheel scroll timeout if key is pressed
-        clearTimeout(wheelTimeout);
-        accumulatedDeltaY = 0;
 
         let direction = 0;
-        if (event.key === 'ArrowDown') direction = 1;
-        else if (event.key === 'ArrowUp') direction = -1;
-        else { return; }
+        if (event.key === 'ArrowDown') direction = 1; // Down arrow means scroll down
+        else if (event.key === 'ArrowUp') direction = -1; // Up arrow means scroll up
+        else { return; } // Ignore other keys
+
+        event.preventDefault(); // Prevent default page scroll from arrow keys ONLY when hijacking
 
         const currentIndex = getCurrentSectionIndex();
         let targetIndex = currentIndex + direction;
+        // Clamp target index within bounds
         targetIndex = Math.max(0, Math.min(targetIndex, allNavTargets.length - 1));
 
+        // Only animate if the target section is different
         if (targetIndex !== currentIndex) {
-            event.preventDefault();
             const targetSection = allNavTargets[targetIndex];
             if (targetSection && targetSection.id) {
                 const targetScrollY = calculateConsistentTargetY(targetSection);
-                // Use section ease for keyboard nav too
+                // Use animateScroll for keyboard navigation to snap (targets the container)
                 animateScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY } });
             }
         }
@@ -516,59 +369,152 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Contact Form Validation & Submission --- (Default handling)
-     const validateContactField = (field) => { /* ... V38 basic validation ... */ let isValid = true; const errorElement = contactForm?.querySelector(`.error-message[data-for="${field.name}"]`); const value = field.value.trim(); field.classList.remove('input-error'); if (errorElement) errorElement.style.display = 'none'; if (field.required && !value) { isValid = false; } else if (field.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { isValid = false; if(errorElement) errorElement.textContent = "A valid email is required."; } else if (field.type === 'date' && value) { try { const d = new Date(value + 'T00:00:00'), t = new Date(); t.setHours(0,0,0,0); if (isNaN(d.getTime()) || d < t) isValid = false; if(errorElement && !isValid) errorElement.textContent = "Date must be today or later"; } catch { isValid = false; if(errorElement) errorElement.textContent = "Invalid date";} } if (!isValid && errorElement) { if(!errorElement.textContent) errorElement.textContent = "Required"; errorElement.style.display = 'block'; field.classList.add('input-error'); } return isValid; };
-    contactForm?.addEventListener('submit', (e) => { console.log("Contact form submit triggered (Default Handling)."); let isFormValid = true; const formMsgElement = contactForm?.querySelector('#form-message'); if (formMsgElement) formMsgElement.classList.add('hidden'); contactForm.querySelectorAll('[required]').forEach(field => { if (!validateContactField(field)) { isFormValid = false; } }); if (!isFormValid) { console.log("Contact form validation failed. Preventing default submission."); e.preventDefault(); // Keep preventDefault for invalid forms
-         // Show general error message or alert
-         alert("Please fill out all required fields correctly.");
-         const firstError = contactForm.querySelector('.input-error');
-         firstError?.focus();
-         scrollIntoViewIfNeeded(firstError?.closest('.input-group') || firstError); } else { console.log("Contact form valid. Allowing default HTML/Netlify submission."); const submitBtn = contactForm.querySelector('#submit-button'); if(submitBtn) submitBtn.disabled = true; /* Let Netlify handle it */ } });
-     contactForm?.querySelectorAll('input[required], textarea[required]').forEach(field => { field.addEventListener('blur', () => validateContactField(field)); });
+    // Only add listeners if the contact form exists on this page
+    if (contactForm) {
+        const validateContactField = (field) => {
+             let isValid = true;
+             const errorElement = contactForm.querySelector(`.error-message[data-for="${field.name}"]`);
+             const value = field.value.trim();
+             field.classList.remove('input-error'); // Clear previous error state
+             if (errorElement) errorElement.style.display = 'none'; // Hide error message
+
+             if (field.required && !value) { // Check required fields
+                 isValid = false;
+             } else if (field.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { // Check email format
+                 isValid = false;
+                 if(errorElement) errorElement.textContent = "A valid email is required.";
+             } else if (field.type === 'date' && value) { // Check if date is valid and not in the past
+                 try {
+                     const d = new Date(value + 'T00:00:00'), t = new Date();
+                     t.setHours(0,0,0,0); // Set time to midnight for comparison
+                     if (isNaN(d.getTime()) || d < t) isValid = false;
+                     if(errorElement && !isValid) errorElement.textContent = "Date must be today or later";
+                 } catch {
+                     isValid = false;
+                     if(errorElement) errorElement.textContent = "Invalid date";
+                 }
+             }
+
+             // Show error message and style if field is invalid
+             if (!isValid && errorElement) {
+                 if(!errorElement.textContent || errorElement.textContent === "Date must be today or later" || errorElement.textContent === "A valid email is required.") {
+                     // Use default "Required" unless a specific message was set
+                     if (!errorElement.textContent) errorElement.textContent = "Required";
+                 } else {
+                     errorElement.textContent = "Required"; // Fallback required message
+                 }
+                 errorElement.style.display = 'block';
+                 field.classList.add('input-error');
+             }
+             return isValid;
+          };
+        // Add submit listener to the contact form
+        contactForm.addEventListener('submit', (e) => {
+            console.log("Contact form submit triggered (Default Handling).");
+            let isFormValid = true;
+            const formMsgElement = contactForm.querySelector('#form-message');
+            if (formMsgElement) formMsgElement.classList.add('hidden'); // Hide general message area
+
+            // Validate all required fields
+            contactForm.querySelectorAll('[required]').forEach(field => {
+                if (!validateContactField(field)) {
+                    isFormValid = false;
+                }
+            });
+
+            if (!isFormValid) {
+                console.log("Contact form validation failed. Preventing default submission.");
+                e.preventDefault(); // Stop form submission if invalid
+                alert("Please fill out all required fields correctly."); // Simple alert for user
+                const firstError = contactForm.querySelector('.input-error');
+                firstError?.focus(); // Focus the first invalid field
+                scrollIntoViewIfNeeded(firstError?.closest('.input-group') || firstError); // Scroll error into view
+            } else {
+                // Allow default form submission (handled by Netlify)
+                console.log("Contact form valid. Allowing default HTML/Netlify submission.");
+                const submitBtn = contactForm.querySelector('#submit-button');
+                if(submitBtn) submitBtn.disabled = true; // Disable button to prevent double submit
+            }
+         });
+         // Add blur listener for real-time validation feedback after user leaves a field
+         contactForm.querySelectorAll('input[required], textarea[required]').forEach(field => {
+             field.addEventListener('blur', () => validateContactField(field));
+         });
+
+         // Set the minimum date for the contact form date input to today
+        if (dateField) {
+            try {
+                const today = new Date();
+                const year = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+                const dd = String(today.getDate()).padStart(2, '0');
+                dateField.min = `${year}-${mm}-${dd}`; // Set min attribute in YYYY-MM-DD format
+            } catch (e) {
+                console.error("Error setting min date for contact form:", e);
+            }
+         }
+    } // End if(contactForm)
 
 
-    // --- Footer Year & Min Date ---
+    // --- Footer Year ---
+    // Set the current year in the footer
     if (currentYearSpan) { currentYearSpan.textContent = new Date().getFullYear(); }
-    if (dateField) { try { const today = new Date(); const year = today.getFullYear(); const mm = String(today.getMonth() + 1).padStart(2, '0'); const dd = String(today.getDate()).padStart(2, '0'); dateField.min = `${year}-${mm}-${dd}`; } catch (e) { console.error("Error setting min date for contact form:", e); } }
+
+
+    // --- Gallery Video Autoplay Logic (No JS needed) ---
+    // Hover logic removed
 
 
     // --- Initial Calls & Event Listeners Setup ---
-    initParticles(); // Initialize particles!
+    initParticles(); // Initialize hero particles (will only run if container exists)
 
+    // Debounced handlers for scroll events to improve performance
     const debouncedNavHandler = debounce(handleActiveNav, 50);
     const debouncedScrollToTopHandler = debounce(handleScrollToTopVisibility, 50);
+
+    // Function to set up appropriate scroll listeners based on screen size
     const setupScrollListeners = () => {
-        const currentScrollTarget = getScrollTarget();
-        // Remove potentially old listeners first
+        const currentScrollTarget = getScrollTarget(); // Determine if scrolling window or container
+        const isDesktop = isDesktopJsScrollActive(); // Check if desktop container exists
+
+        // Remove potentially old listeners first to avoid duplicates
         window.removeEventListener('scroll', debouncedNavHandler);
         window.removeEventListener('scroll', debouncedScrollToTopHandler);
-        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keydown', handleKeyDown); // Remove global key listener initially
         scrollSnapContainer?.removeEventListener('scroll', debouncedNavHandler);
         scrollSnapContainer?.removeEventListener('scroll', debouncedScrollToTopHandler);
-        scrollSnapContainer?.removeEventListener('wheel', handleWheel);
-        // Add appropriate listeners
-        if (currentScrollTarget === window) {
-            window.addEventListener('scroll', debouncedNavHandler, { passive: true });
-            window.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true });
-            window.addEventListener('keydown', handleKeyDown);
-        } else {
+        // REMOVED: scrollSnapContainer?.removeEventListener('wheel', handleWheel);
+
+        // Add appropriate listeners based on the scroll target
+        if (isDesktop) { // Desktop view (scrolling container)
+            // Listen for regular scroll events on the container for nav/button updates
             scrollSnapContainer.addEventListener('scroll', debouncedNavHandler, { passive: true });
             scrollSnapContainer.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true });
-            scrollSnapContainer.addEventListener('wheel', handleWheel, { passive: false });
+            // Add keyboard listener ONLY for desktop container view
             window.addEventListener('keydown', handleKeyDown);
+            console.log("Scroll listeners configured for: container (Desktop) - Key listener ACTIVE.");
+        } else { // Mobile/Tablet view (scrolling window)
+            window.addEventListener('scroll', debouncedNavHandler, { passive: true });
+            window.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true });
+            // DO NOT add keyboard listener for mobile/tablet
+             console.log("Scroll listeners configured for: window (Mobile/Tablet) - Key listener INACTIVE.");
         }
     };
-    setupScrollListeners();
-    handleScrollToTopVisibility();
-    setTimeout(handleActiveNav, 150); // Initial nav check
+
+    // Initial setup
+    setupScrollListeners(); // Set up listeners on page load
+    handleScrollToTopVisibility(); // Check initial visibility of scroll-to-top button
+    setTimeout(handleActiveNav, 150); // Check initial active nav link shortly after load
+
+    // Re-setup listeners on window resize to handle switch between desktop/mobile views
     window.addEventListener('resize', debounce(() => {
-         setupScrollListeners();
-         handleActiveNav();
-         handleScrollToTopVisibility();
-     }, 250));
-    // Listener for scroll-to-top uses animateScroll wrapper now
-    scrollToTopButton?.addEventListener('click', () => {
-        const scrollTarget = getScrollTarget();
-        animateScroll(scrollTarget, linkScrollDuration, { scrollTo: 0, ease: linkScrollEase });
-     });
+         console.log("Window resized, re-evaluating scroll listeners.");
+         setupScrollListeners(); // Re-run setup to attach/detach listeners correctly
+         handleActiveNav(); // Update nav state immediately after resize
+         handleScrollToTopVisibility(); // Update button visibility
+     }, 250)); // Debounce resize handler
+
+    // Attach click listener to scroll-to-top button (already cached)
+    // No changes needed here, it uses getScrollTarget()
 
 }); // End DOMContentLoaded
