@@ -1,15 +1,16 @@
 /**
- * Main JavaScript for Keys by Caleb Website (V53 - Conditional Key Listener, No Video Hover)
- * Handles scroll-to-top, active nav highlighting, GSAP smooth scroll (links),
- * contact form (default HTML handling), tsParticles hero animation (Float Effect), footer copyright year.
+ * Main JavaScript for Keys by Caleb Website (V53 - MODIFIED v3 for Mobile Nav Highlight)
+ * Handles scroll-to-top, active nav highlighting (desktop & scrollable mobile bottom nav),
+ * GSAP smooth scroll (links), contact form (default HTML handling),
+ * tsParticles hero animation (Float Effect), footer copyright year.
  * Implements JS-driven section scrolling ONLY for Keyboard and Link Clicks on desktop index page.
- * Removed wheel event hijacking to allow native trackpad/mouse wheel scrolling.
- * Removed gallery video hover logic.
+ * Desktop header nav is preserved, mobile uses scrollable bottom nav.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     // Log script initialization with version
-    console.log("Keys by Caleb NEW JS Initialized (V53 - Conditional Key Listener, No Video Hover).");
+    // *** MODIFIED: Updated log message ***
+    console.log("Keys by Caleb NEW JS Initialized (V53 - MODIFIED v3 for Mobile Nav Highlight).");
 
     // --- GSAP Plugin Registration ---
     // Ensure GSAP and ScrollToPlugin are loaded before registering
@@ -35,9 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Store frequently accessed DOM elements for performance
     const header = document.getElementById('main-header');
     const scrollToTopButton = document.getElementById('scroll-to-top'); // Scroll button for index
-    const internalLinks = document.querySelectorAll('a.internal-link[href^="#"], a.nav-link[href^="#"]:not([href="#"]), a.header-logo[href^="#"]');
-    const headerNavLinks = document.querySelectorAll('#main-header nav a.nav-link:not(.booking-nav-link):not(.follow-button):not([title="Email Me"])');
-    const bookingNavLink = document.querySelector('#main-header nav .booking-nav-link');
+    // *** MODIFIED: Include mobile nav items in internal links selector ***
+    const internalLinks = document.querySelectorAll('a.internal-link[href^="#"], a.nav-link[href^="#"]:not([href="#"]), a.header-logo[href^="#"], #mobile-bottom-nav a.mobile-nav-item[href^="#"]');
+    // *** MODIFIED: Target specific desktop links for desktop highlighting ***
+    const desktopNavLinks = document.querySelectorAll('#desktop-nav-elements a.nav-link:not(.booking-nav-link):not(.follow-button):not([title="Email Me"])');
+    // *** ADDED: Cache mobile nav items ***
+    const mobileNavItems = document.querySelectorAll('#mobile-bottom-nav .mobile-nav-item');
+    const bookingNavLink = document.querySelector('#main-header nav .booking-nav-link'); // Kept original V53 selector
     const contactForm = document.getElementById('contact-form'); // Contact form on index
     const contactFormMessage = contactForm?.querySelector('#form-message');
     const contactSubmitButton = contactForm?.querySelector('#submit-button');
@@ -65,8 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
             timeout = setTimeout(later, wait);
         };
     };
-    // Get the current height of the fixed header
-    const getHeaderHeight = () => header?.offsetHeight || 70; // Default to 70 if header not found
+    // *** MODIFIED: Get header height based on screen size ***
+    const getHeaderHeight = () => {
+        return window.innerWidth < 1024 ? 60 : 70; // 60px mobile, 70px desktop
+    };
     // Check if desktop JS-driven scrolling should be active (REQUIRES the container)
     const isDesktopJsScrollActive = () => window.innerWidth >= 1024 && scrollSnapContainer;
     // Determine the scroll target (window or the container) based on screen size AND container presence
@@ -154,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Animate scroll with GSAP (Wrapper function used by programmatic scrolls like keyboard/links)
     // Handles the actual scrolling animation and manages the isAnimating flag
+    // *** MODIFIED: Calls handleActiveNav onComplete/onInterrupt ***
     const animateScroll = (target, duration, params) => {
         const ease = params.ease || sectionScrollEase; // Use provided ease or default
         // console.log(`AnimateScroll START - Y: ${params?.scrollTo?.y?.toFixed(0)}, Ease: ${ease}`);
@@ -182,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (isDesktopJsScrollActive()) {
                      window.addEventListener('keydown', handleKeyDown);
                  }
+                handleActiveNav(); // Update nav after animation completes
                 params.onComplete?.(); // Call any provided callback
             },
             onInterrupt: () => { // If animation is interrupted (e.g., by user scroll)
@@ -191,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (isDesktopJsScrollActive()) {
                      window.addEventListener('keydown', handleKeyDown);
                  }
+                 handleActiveNav(); // Update nav immediately on interrupt
                 params.onInterrupt?.(); // Call any provided callback
             }
         });
@@ -201,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
      const calculateConsistentTargetY = (targetElement) => {
          if (!targetElement || !scrollSnapContainer) return 0; // Need container for offsetTop
          if (targetElement.id === 'hero') return 0; // Hero section is always at the top
-         const headerHeight = getHeaderHeight();
+         const headerHeight = getHeaderHeight(); // Use dynamic height
          // Calculate target position slightly above the element's top relative to the container
          let targetScrollY = targetElement.offsetTop - (headerHeight * headerOffsetFactor);
          return Math.max(0, targetScrollY); // Ensure target isn't negative
@@ -214,40 +224,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrollPosition = (scrollTarget === window) ? window.pageYOffset : scrollTarget.scrollTop;
         const viewportHeight = (scrollTarget === window) ? window.innerHeight : scrollTarget.clientHeight;
         const scrollHeight = (scrollTarget === window) ? document.body.scrollHeight : scrollTarget.scrollHeight;
+        const headerHeight = getHeaderHeight(); // Use dynamic height
 
-        let bestMatchIndex = 0;
-        let minDistance = Infinity;
+        let bestMatchIndex = 0; // Default to hero
 
-        // Find the section whose calculated target position is closest to the current scroll position
-        allNavTargets.forEach((section, index) => {
-            // Calculate target based on container offset if desktop, otherwise window offset
-            let targetPos;
+        // Iterate through sections to find the one currently in view
+        for (let i = allNavTargets.length - 1; i >= 0; i--) {
+            const section = allNavTargets[i];
+            let sectionTop;
+            const activationOffset = headerHeight * 0.6; // Activate when section is about 60% down the header
+
             if (isDesktopJsScrollActive()) {
-                 targetPos = calculateConsistentTargetY(section);
+                sectionTop = section.offsetTop - activationOffset;
             } else {
-                 // Estimate position for window scroll (less precise but needed for nav highlight)
-                 targetPos = Math.max(0, section.offsetTop - getHeaderHeight()); // Simple offset from top of document
+                 sectionTop = section.offsetTop - activationOffset;
             }
 
-            const distance = Math.abs(scrollPosition - targetPos);
-            if (distance < minDistance) {
-                minDistance = distance;
-                bestMatchIndex = index;
-            }
-        });
-
-        // Special case: If scrolled very close to the bottom, consider the last target active
-        if (scrollPosition + viewportHeight >= scrollHeight - 50) {
-             // Ensure allNavTargets is not empty before accessing the last element
-            if (allNavTargets.length > 0) {
-                 bestMatchIndex = allNavTargets.length - 1;
+            // If the scroll position is below the activation point of this section, it's the active one (or further down)
+            if (scrollPosition >= sectionTop) {
+                bestMatchIndex = i;
+                break; // Found the highest section that meets the criteria
             }
         }
+        // Check edge case: scrolled very close to the bottom
+        if (scrollPosition + viewportHeight >= scrollHeight - 50) {
+            if (allNavTargets.length > 0) {
+                 bestMatchIndex = allNavTargets.length - 1; // Force last section active
+            }
+        }
+        // Top edge case (being near top) is handled by the loop default/logic implicitly
+
         return bestMatchIndex;
      };
 
 
-    // GSAP Smooth Scrolling for Internal Links (e.g., nav links, buttons)
+    // GSAP Smooth Scrolling for Internal Links (e.g., nav links, buttons, mobile nav)
     internalLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             const href = link.getAttribute('href');
@@ -269,7 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
                      // Calculate offset relative to the document for window scrolling
                      const elementRect = targetElement.getBoundingClientRect();
                      const absoluteElementTop = elementRect.top + window.pageYOffset;
-                     targetScrollY = Math.max(0, absoluteElementTop - getHeaderHeight());
+                     // Adjust offset to land slightly below the mobile header
+                     targetScrollY = Math.max(0, absoluteElementTop - getHeaderHeight() - 10);
                  }
 
                  // Use the animateScroll wrapper with specific link settings
@@ -290,41 +302,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Active Navigation Link Highlighting based on scroll position
+    // *** MODIFIED: Active Navigation Link Highlighting (Desktop Header + Mobile Bottom Nav) ***
     const handleActiveNav = () => {
-        // Find the best matching section index first
         const currentSectionIndex = getCurrentSectionIndex();
-        let currentSectionId = allNavTargets[currentSectionIndex]?.id || 'hero'; // Default to hero if no match
+        let currentSectionId = allNavTargets[currentSectionIndex]?.id || 'hero';
+        if (currentSectionId === 'main-footer') { currentSectionId = 'contact'; } // Map footer to contact
 
-        // Refine based on edge cases (top/bottom)
-        const scrollTarget = getScrollTarget();
-        const scrollPosition = (scrollTarget === window) ? window.pageYOffset : scrollTarget.scrollTop;
-        const headerHeight = getHeaderHeight();
-        const scrollTargetElement = (scrollTarget === window) ? document.documentElement : scrollTarget;
-        if (!scrollTargetElement) return;
-        const viewportHeight = scrollTargetElement.clientHeight || window.innerHeight;
-        const scrollHeight = scrollTargetElement.scrollHeight || document.body.scrollHeight;
-
-        if (scrollPosition + viewportHeight >= scrollHeight - 50) {
-            const lastElement = allNavTargets[allNavTargets.length - 1];
-            if (lastElement && lastElement.id) {
-                currentSectionId = lastElement.id;
-                // Map footer ID to contact section ID for highlighting
-                if (currentSectionId === 'main-footer') currentSectionId = 'contact';
-            }
-        } else if (scrollPosition < headerHeight * 0.5) {
-            currentSectionId = 'hero';
-        }
-        // else use the index found earlier
-
-        // Update active class on header navigation links
-        headerNavLinks.forEach(link => {
+        // Update desktop header links (uses `desktopNavLinks` selector)
+        desktopNavLinks.forEach(link => {
             link.classList.remove('active');
             const linkHref = link.getAttribute('href');
-            if (linkHref === `#${currentSectionId}`) {
+            // Ensure it's an internal link before checking ID
+            if (linkHref && linkHref.startsWith('#') && linkHref === `#${currentSectionId}`) {
                 link.classList.add('active');
             }
         });
+
+        // Update mobile bottom nav items
+        mobileNavItems.forEach(item => {
+            item.classList.remove('active');
+            const itemHref = item.getAttribute('href');
+            // Highlight based on matching internal section ID
+            if (itemHref && itemHref.startsWith('#') && itemHref === `#${currentSectionId}`) {
+                item.classList.add('active');
+            }
+            // Highlight 'Booking' or 'Partners' based on current page URL if not an internal link
+            else if (itemHref && !itemHref.startsWith('#')) {
+                const isBookingPage = window.location.pathname.includes('booking-');
+                const isVendorPage = window.location.pathname.includes('vendor-');
+                if (itemHref.includes('booking-') && isBookingPage) {
+                    item.classList.add('active');
+                } else if (itemHref.includes('vendor-') && isVendorPage) {
+                     item.classList.add('active');
+                }
+            }
+        });
+        // console.log(`Active section: ${currentSectionId}`); // For debugging
      };
 
 
@@ -448,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const year = today.getFullYear();
                 const mm = String(today.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
                 const dd = String(today.getDate()).padStart(2, '0');
-                dateField.min = `${year}-${mm}-${dd}`; // Set min attribute in YYYY-MM-DD format
+                dateField.min = `${year}-${mm}-${dd}`; // Set min attribute in<x_bin_880>-MM-DD format
             } catch (e) {
                 console.error("Error setting min date for contact form:", e);
             }
