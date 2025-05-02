@@ -1,5 +1,5 @@
 /* --- START OF style-new.css --- */
-/* Styles for Keys by Caleb Home Page - V63 (Mobile Carousels) */
+/* Styles for Keys by Caleb Home Page - V63.3 (Restore Mobile Scroll Button Position) */
 
 /* --- Base & Variables --- */
 :root {
@@ -165,11 +165,14 @@ body {
     footer .md\:justify-start { justify-content: center;}
     footer .footer-heading { font-size: 0.9rem; } footer .footer-nav-link { font-size: 0.9rem; }
 
+    /* --- Restored Mobile Scroll-to-Top Button Position --- */
     #scroll-to-top {
         bottom: calc(var(--mobile-nav-height) + 1rem); /* Position above mobile nav */
-        right: 1rem;
-        width: 2.5rem; height: 2.5rem; font-size: 1.1rem;
-        z-index: 999; /* Ensure it's above content but below mobile nav */
+        right: 1.5rem; /* Nudged slightly left from the edge */
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.1rem;
+        z-index: 9999; /* Ensure high z-index */
     }
 }
 
