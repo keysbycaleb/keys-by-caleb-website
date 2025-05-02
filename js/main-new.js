@@ -1,14 +1,15 @@
 /**
- * Main JavaScript for Keys by Caleb Website (V58 - Relative Mobile Scroll)
+ * Main JavaScript for Keys by Caleb Website (V58.1 - Fix Mobile Jump Glitch)
  * Handles scroll-to-top, active nav highlighting, GSAP smooth scroll (manual coords desktop, relative mobile),
  * contact form, tsParticles, footer year. Includes initial scroll offset per view.
  * Uses desktop coordinates, calculates mobile scroll position dynamically.
  * Arrow key navigation (desktop only) includes the footer.
+ * Removes setInitialScroll from resize handler to prevent mobile jumps.
  * Placeholder for mobile carousel logic.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb NEW JS Initialized (V58 - Relative Mobile Scroll).");
+    console.log("Keys by Caleb NEW JS Initialized (V58.1 - Fix Mobile Jump Glitch).");
 
     // --- GSAP Plugin Registration ---
     if (typeof gsap !== 'undefined' && typeof ScrollToPlugin !== 'undefined') {
@@ -50,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const footerElement = document.getElementById('main-footer');
 
     // --- Create ordered list of scrollable elements based on DESKTOP targets ---
-    // This defines the sequence primarily for keyboard navigation and consistent indexing
     const scrollableTargetIds = Object.keys(desktopScrollTargets);
     const scrollableElements = scrollableTargetIds
         .map(id => document.getElementById(id))
@@ -81,15 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Animate Page Scroll ---
     const animatePageScroll = (target, duration, params) => {
-        const ease = params.ease || linkScrollEase; // Default to link ease
-        if (isPageScrolling) {
-            // console.log("Page scroll animation blocked - already scrolling.");
-            return;
-        }
+        const ease = params.ease || linkScrollEase;
+        if (isPageScrolling) { return; }
         isPageScrolling = true;
-        const isDesktop = isDesktopJsScrollActive(); // Check view at animation start
+        const isDesktop = isDesktopJsScrollActive();
 
-        // Detach key listener ONLY if desktop scroll is active during animation
         if (isDesktop) { window.removeEventListener('keydown', handleKeyDown); }
 
         gsap.to(target, {
@@ -99,16 +95,14 @@ document.addEventListener('DOMContentLoaded', () => {
             overwrite: 'auto',
             onComplete: () => {
                 isPageScrolling = false;
-                // Re-attach key listener ONLY if desktop scroll is active
                 if (isDesktop) { window.addEventListener('keydown', handleKeyDown); }
-                handleActiveNav(); // Update nav AFTER animation completes
+                handleActiveNav();
                 params.onComplete?.();
             },
             onInterrupt: () => {
                 isPageScrolling = false;
-                // Re-attach key listener ONLY if desktop scroll is active
                 if (isDesktop) { window.addEventListener('keydown', handleKeyDown); }
-                handleActiveNav(); // Update nav immediately on interrupt
+                handleActiveNav();
                 params.onInterrupt?.();
             }
         });
@@ -129,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (desktopScrollTargets.hasOwnProperty(targetId)) {
                 targetY = desktopScrollTargets[targetId];
             } else {
-                // Fallback for desktop if ID not mapped (shouldn't happen for main nav)
                 console.warn(`Target ID "${targetId}" not found in desktopScrollTargets. Using offsetTop fallback.`);
                 targetY = Math.max(0, targetElement.offsetTop - getHeaderHeight());
             }
@@ -141,10 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetId === 'hero') {
                 targetY = 0; // Always scroll to top for hero on mobile
             } else {
-                // Calculate position relative to document top
                 const elementRect = targetElement.getBoundingClientRect();
                 const absoluteElementTop = elementRect.top + window.pageYOffset;
-                // Target position = element top - header height - small offset
                 targetY = absoluteElementTop - headerHeight - mobileScrollOffset;
             }
             maxScrollY = document.documentElement.scrollHeight - window.innerHeight;
@@ -157,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Find Current Section Index for Highlighting ---
-    // Determines which element in `scrollableElements` is currently active
     const getCurrentElementIndex = () => {
         const isDesktop = isDesktopJsScrollActive();
         const scrollTarget = getScrollTarget();
@@ -173,31 +163,25 @@ document.addEventListener('DOMContentLoaded', () => {
             let elementTop;
 
             if (isDesktop) {
-                // Use the predefined desktop coordinate as the reference point
-                elementTop = desktopScrollTargets[element.id] ?? element.offsetTop; // Fallback to offsetTop if somehow missing
+                elementTop = desktopScrollTargets[element.id] ?? element.offsetTop;
             } else {
-                // Use the element's actual position relative to the document
                 elementTop = element.offsetTop;
             }
 
-            // Consider active if the scroll position is at or below the element's top
-            // minus a portion of the header height (so it activates as it comes into view)
-            const activationPoint = elementTop - (headerHeight * 0.5); // Activate when halfway past header
+            const activationPoint = elementTop - (headerHeight * 0.5);
 
             if (scrollPosition >= activationPoint) {
                 bestMatchIndex = i;
-                break; // Found the highest section meeting the criteria
+                break;
             }
         }
 
         // --- Edge Case Handling ---
-        // If very near the top, force the first element (hero)
-        if (scrollPosition < headerHeight * 0.5) { // Adjust threshold if needed
+        if (scrollPosition < headerHeight * 0.5) {
              bestMatchIndex = 0;
         }
-        // If scrolled to the absolute bottom, force the last element
         const scrollHeight = (scrollTarget === window) ? document.documentElement.scrollHeight : scrollTarget.scrollHeight;
-        if (scrollPosition + viewportHeight >= scrollHeight - 10) { // Allow small tolerance
+        if (scrollPosition + viewportHeight >= scrollHeight - 10) {
            bestMatchIndex = scrollableElements.length -1;
         }
 
@@ -206,13 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Internal Link Click Handler ---
-    // Uses getTargetScrollY which handles desktop/mobile logic
     internalLinks.forEach(link => {
         link.addEventListener('click', (e) => {
             const href = link.getAttribute('href');
             if (href && href.startsWith('#') && href.length > 1) {
                  const targetId = href.substring(1);
-                 const targetElement = scrollableElements.find(el => el.id === targetId); // Find in our master list
+                 // Find the element in our master list (includes footer for desktop nav)
+                 const targetElement = scrollableElements.find(el => el.id === targetId);
 
                  if (targetElement) {
                      e.preventDefault(); // Prevent default jump only if we handle it
@@ -232,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scrollToTopButton.addEventListener('click', () => {
             const scrollTarget = getScrollTarget();
             const heroElement = document.getElementById('hero');
-            const heroTargetY = getTargetScrollY(heroElement); // Get correct hero Y for current view
+            const heroTargetY = getTargetScrollY(heroElement);
             animatePageScroll(scrollTarget, linkScrollDuration, { scrollTo: { y: heroTargetY }, ease: linkScrollEase });
         });
     }
@@ -241,10 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleActiveNav = () => {
         const currentElementIndex = getCurrentElementIndex();
         let currentElementId = scrollableElements[currentElementIndex]?.id || 'hero';
-        // Map footer scroll position to 'contact' link highlight ID
         let highlightId = (currentElementId === 'main-footer') ? 'contact' : currentElementId;
 
-        // Map 'packages' section ID to 'services' link text/href if necessary
         if (highlightId === 'packages') {
              highlightId = 'services';
         }
@@ -256,7 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Keyboard Navigation Logic (Desktop Only, Includes Footer) ---
     const handleKeyDown = (event) => {
-        // Guard clause: Only run if desktop container scroll is active AND not currently page scrolling
         if (!isDesktopJsScrollActive() || isPageScrolling) return;
 
         const activeElement = document.activeElement;
@@ -268,18 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (event.key === 'ArrowUp') direction = -1;
         else return;
 
-        event.preventDefault(); // Prevent default page scroll ONLY when hijacking
+        event.preventDefault();
 
-        const currentIndex = getCurrentElementIndex(); // Index within scrollableElements
+        const currentIndex = getCurrentElementIndex();
         let targetIndex = currentIndex + direction;
-
-        // Clamp target index within the bounds of scrollableElements
         targetIndex = Math.max(0, Math.min(targetIndex, scrollableElements.length - 1));
 
         if (targetIndex !== currentIndex) {
             const targetElement = scrollableElements[targetIndex];
             if (targetElement && targetElement.id) {
-                // IMPORTANT: getTargetScrollY will fetch the DESKTOP coordinate here
                 const targetScrollY = getTargetScrollY(targetElement);
                 animatePageScroll(scrollSnapContainer, sectionScrollDuration, { scrollTo: { y: targetScrollY }, ease: sectionScrollEase });
             }
@@ -294,9 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Mobile Carousel Logic (Placeholder) ---
     const manageCarousels = () => {
-        // Placeholder - Carousel logic removed in this version
+        // This function is intentionally left empty in this version
         if (isMobileView()) {
-            // console.log("Mobile view: Carousel logic placeholder.");
+            // console.log("Mobile view: Carousel logic is currently disabled.");
         } else {
             // console.log("Desktop view: No carousel cleanup needed.");
         }
@@ -304,25 +282,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Initial Scroll Correction ---
-    // Sets initial scroll based on view (desktop coords or mobile calculation)
     const setInitialScroll = () => {
         const isDesktop = isDesktopJsScrollActive();
         const scrollTarget = getScrollTarget();
         const heroElement = document.getElementById('hero');
-        if (!heroElement) return; // Exit if hero element doesn't exist
+        if (!heroElement) return;
 
-        // Get the correct hero coordinate/calculation for the current view
         const heroTargetY = getTargetScrollY(heroElement);
 
         setTimeout(() => {
             const currentScroll = isDesktop ? scrollTarget.scrollTop : window.pageYOffset;
-            // Check if correction is needed (allow small tolerance)
             if (Math.abs(currentScroll - heroTargetY) > 5) {
                  // console.log(`Correcting initial scroll position for ${isDesktop ? 'desktop' : 'mobile'} to ${heroTargetY}`);
-                // Use instant scroll for initial correction
                 scrollTarget.scrollTo({ top: heroTargetY, behavior: 'instant' });
             }
-            // Update nav highlight AFTER potential scroll correction
             handleActiveNav();
         }, initialScrollDelay);
     };
@@ -332,23 +305,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const debouncedNavHandler = debounce(handleActiveNav, 50);
     const debouncedScrollToTopHandler = debounce(handleScrollToTopVisibility, 50);
 
-    // Setup listeners based on the initial view
     const setupScrollListeners = () => {
         const isDesktop = isDesktopJsScrollActive();
         const scrollTarget = getScrollTarget();
 
-        // Remove potentially old listeners first
         window.removeEventListener('scroll', debouncedNavHandler);
         window.removeEventListener('scroll', debouncedScrollToTopHandler);
         window.removeEventListener('keydown', handleKeyDown);
         scrollSnapContainer?.removeEventListener('scroll', debouncedNavHandler);
         scrollSnapContainer?.removeEventListener('scroll', debouncedScrollToTopHandler);
 
-        // Add appropriate scroll listeners
         scrollTarget.addEventListener('scroll', debouncedNavHandler, { passive: true });
         scrollTarget.addEventListener('scroll', debouncedScrollToTopHandler, { passive: true });
 
-        // Add key listener ONLY if desktop JS scroll is active
         if (isDesktop) {
             window.addEventListener('keydown', handleKeyDown);
             // console.log("Scroll listeners configured for: container (Desktop) - Key listener ACTIVE.");
@@ -362,11 +331,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setInitialScroll(); // Call initial scroll correction
     manageCarousels(); // Initial check for carousels (currently does nothing)
 
-    // Re-evaluate on resize
+    // --- Resize Handler ---
+    // **REMOVED setInitialScroll() from here**
     window.addEventListener('resize', debounce(() => {
         // console.log("Window resized, re-evaluating listeners and carousels.");
         setupScrollListeners(); // Re-add/remove correct listeners
-        setInitialScroll();     // Re-apply initial scroll for new view potentially
         manageCarousels();      // Re-check/setup/cleanup carousels (currently does nothing)
         handleActiveNav();      // Update nav highlight for new view/scroll pos
         handleScrollToTopVisibility(); // Update scroll button visibility
