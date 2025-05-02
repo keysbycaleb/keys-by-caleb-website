@@ -107,7 +107,8 @@
             </div>
         </section>
 
-        <section id="about"> <div class="container mx-auto px-6 flex flex-col md:flex-row items-center gap-12 md:gap-16">
+        <section id="about">
+            <div class="container mx-auto px-6 flex flex-col md:flex-row items-center gap-12 md:gap-16">
                 <div class="md:w-2/5"><img src="assets/images/caleb_profile_pic.jpg" alt="Caleb playing piano outdoors at an event" class="rounded-lg shadow-xl w-full h-auto object-cover aspect-[4/5] max-h-[70vh]"></div>
                 <div class="md:w-3/5 text-center md:text-left">
                     <h2 class="section-title">Meet Caleb</h2><p class="section-subtitle mb-6">Your Event Pianist</p>
@@ -119,9 +120,28 @@
             </div>
         </section>
 
-        <section id="packages"> <div class="container mx-auto px-6 text-center">
-                <h2 class="section-title">Packages</h2><p class="section-subtitle mb-12 md:mb-16 max-w-3xl mx-auto">Choose the perfect live piano experience for your event, from focused moments to comprehensive coverage.</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+        <section id="packages">
+             <div class="container mx-auto px-6 text-center">
+                <h2 class="section-title">Packages</h2>
+                <p class="section-subtitle mb-12 md:mb-16 max-w-3xl mx-auto">Choose the perfect live piano experience for your event, from focused moments to comprehensive coverage.</p>
+
+                <div class="packages-carousel-container relative lg:hidden">
+                    <div class="packages-carousel-track flex overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 -mx-3 px-3">
+                        <div class="package-card w-[85%] sm:w-3/4 flex-shrink-0 snap-center mx-2">
+                            <div class="package-icon"><i class="fas fa-stopwatch"></i></div><h3 class="package-title">Just One Moment</h3><p class="package-price">$495</p><p class="package-description">Ideal for ceremonies, proposals, or specific highlights. Includes up to 1 hour of continuous live piano music.</p><a href="booking-jom-new.html" class="btn btn-primary w-full mt-6">Book This Moment <i class="fas fa-arrow-right ml-2"></i></a>
+                        </div>
+                        <div class="package-card w-[85%] sm:w-3/4 flex-shrink-0 snap-center mx-2">
+                            <div class="package-icon"><i class="fas fa-clock"></i></div><h3 class="package-title">By the Hour</h3><p class="package-price">$275 / Hour (2hr Min)</p><p class="package-description">Flexible timing tailored to your needs. Perfect for parties, corporate functions, or unique events requiring specific durations.</p><a href="booking-hourly.html" class="btn btn-primary w-full mt-6">Book Hourly <i class="fas fa-calendar-alt ml-2"></i></a>
+                        </div>
+                        <div class="package-card w-[85%] sm:w-3/4 flex-shrink-0 snap-center mx-2">
+                            <div class="package-icon"><i class="fas fa-star"></i></div><h3 class="package-title">The Full Experience</h3><p class="package-price">$1495 Package</p><p class="package-description">Comprehensive wedding coverage (e.g., ceremony + cocktail hour + dinner). Custom curated music throughout.</p><a href="booking-tfe-new.html" class="btn btn-primary w-full mt-6">Book Full Experience <i class="fas fa-chess-king ml-2"></i></a>
+                        </div>
+                    </div>
+                    <button aria-label="Previous Package" class="carousel-button prev absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-brand-primary p-2 rounded-full shadow-md z-10 hidden"><i class="fas fa-chevron-left"></i></button>
+                    <button aria-label="Next Package" class="carousel-button next absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-brand-primary p-2 rounded-full shadow-md z-10 hidden"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <div class="hidden lg:grid lg:grid-cols-3 lg:gap-8 lg:gap-10">
                     <div class="package-card">
                         <div class="package-icon"><i class="fas fa-stopwatch"></i></div><h3 class="package-title">Just One Moment</h3><p class="package-price">$495</p><p class="package-description">Ideal for ceremonies, proposals, or specific highlights. Includes up to 1 hour of continuous live piano music.</p><a href="booking-jom-new.html" class="btn btn-primary w-full mt-6">Book This Moment <i class="fas fa-arrow-right ml-2"></i></a>
                     </div>
@@ -135,7 +155,8 @@
             </div>
         </section>
 
-        <section id="gallery" class="section-allow-scroll"> <div class="container mx-auto px-6 text-center">
+        <section id="gallery" class="section-allow-scroll">
+            <div class="container mx-auto px-6 text-center">
                 <h2 class="section-title">Gallery</h2><p class="section-subtitle mb-12 md:mb-16">Moments captured from beautiful events.</p>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                     <div class="gallery-item"><video class="gallery-video" src="assets/images/vidgallery1.mp4" loop muted autoplay playsinline poster="assets/images/gallery1.JPG">Your browser does not support the video tag.</video></div>
@@ -148,11 +169,31 @@
             </div>
         </section>
 
-        <section id="testimonials" class="section-allow-scroll"> <div class="container mx-auto px-6 text-center">
-                <h2 class="section-title">Kind Words</h2><p class="section-subtitle mb-8 md:mb-10">What clients are saying about Keys by Caleb.</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 mb-6 md:mb-8">
+        <section id="testimonials" class="section-allow-scroll">
+             <div class="container mx-auto px-6 text-center">
+                <h2 class="section-title">Kind Words</h2>
+                <p class="section-subtitle mb-8 md:mb-10">What clients are saying about Keys by Caleb.</p>
+
+                <div class="testimonials-carousel-container relative lg:hidden mb-6 md:mb-8">
+                    <div class="testimonials-carousel-track flex overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 -mx-3 px-3">
+                        <div class="testimonial-card w-[85%] sm:w-3/4 flex-shrink-0 snap-center mx-2">
+                            <div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"Caleb's music was the absolute highlight of our ceremony. So elegant and moving. Many guests commented on how beautiful it was!"</p><p class="font-semibold text-brand-primary">- Sarah & Tom W.</p>
+                        </div>
+                        <div class="testimonial-card w-[85%] sm:w-3/4 flex-shrink-0 snap-center mx-2">
+                            <div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"As an event planner, I need reliable and talented vendors. Caleb provided the perfect elegant background music for our corporate gala. Professional and easy to work with."</p><p class="font-semibold text-brand-primary">- J. Davis, Event Planner</p>
+                        </div>
+                        <div class="testimonial-card w-[85%] sm:w-3/4 flex-shrink-0 snap-center mx-2">
+                            <div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"From the first email to the final note, Caleb was a pleasure. He learned a special song for us and played it beautifully. Highly recommend!"</p><p class="font-semibold text-brand-primary">- Emily R.</p>
+                        </div>
+                    </div>
+                     <button aria-label="Previous Testimonial" class="carousel-button prev absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-brand-primary p-2 rounded-full shadow-md z-10 hidden"><i class="fas fa-chevron-left"></i></button>
+                    <button aria-label="Next Testimonial" class="carousel-button next absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-brand-primary p-2 rounded-full shadow-md z-10 hidden"><i class="fas fa-chevron-right"></i></button>
+                </div>
+
+                <div class="hidden lg:grid lg:grid-cols-3 lg:gap-8 lg:gap-10 mb-6 md:mb-8">
                     <div class="testimonial-card"><div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"Caleb's music was the absolute highlight of our ceremony. So elegant and moving. Many guests commented on how beautiful it was!"</p><p class="font-semibold text-brand-primary">- Sarah & Tom W.</p></div><div class="testimonial-card"><div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"As an event planner, I need reliable and talented vendors. Caleb provided the perfect elegant background music for our corporate gala. Professional and easy to work with."</p><p class="font-semibold text-brand-primary">- J. Davis, Event Planner</p></div><div class="testimonial-card"><div class="text-brand-secondary text-3xl mb-3 opacity-50"><i class="fas fa-quote-left"></i></div><p class="italic text-brand-text-dark mb-4 leading-relaxed">"From the first email to the final note, Caleb was a pleasure. He learned a special song for us and played it beautifully. Highly recommend!"</p><p class="font-semibold text-brand-primary">- Emily R.</p></div>
                 </div>
+
                 <div class="mt-8 md:mt-10 pt-8 md:pt-10 border-t border-brand-primary/10">
                     <h4 class="font-playfair text-2xl md:text-3xl text-brand-accent mb-4">Ready to Create Your Own Beautiful Moment?</h4>
                     <p class="cta-text text-brand-text-dark opacity-90 mb-6 max-w-lg mx-auto leading-relaxed">Inspired by these stories? Let's discuss how Keys by Caleb can add the perfect touch of elegance to your upcoming event in Riverside or the surrounding areas.</p>
@@ -161,7 +202,8 @@
             </div>
         </section>
 
-        <section id="contact" class="section-allow-scroll"> <div class="container mx-auto px-6 flex flex-col justify-center">
+        <section id="contact" class="section-allow-scroll">
+            <div class="container mx-auto px-6 flex flex-col justify-center">
                 <div class="max-w-3xl mx-auto text-center mb-6 md:mb-8"><h2 class="section-title">Get In Touch</h2><p class="section-subtitle">Ready to discuss the music for your special day? Fill out the form below or email <a href="mailto:keysbycaleb@gmail.com" class="text-brand-primary hover:text-brand-secondary font-medium">keysbycaleb@gmail.com</a> directly.</p></div>
                 <form id="contact-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="max-w-xl mx-auto bg-brand-bg-card p-6 md:p-8 rounded-lg shadow-lg border border-brand-secondary/20 w-full">
                     <div id="form-message" class="mb-6 hidden p-4 rounded-md text-center"></div>
@@ -210,15 +252,11 @@
         <a href="#hero" class="mobile-nav-item internal-link homepage-link"> <i class="fas fa-home mobile-nav-icon"></i>
             <span class="mobile-nav-label">Home</span>
         </a>
-        <a href="index.html#hero" class="mobile-nav-item other-page-link"> <i class="fas fa-home mobile-nav-icon"></i>
-             <span class="mobile-nav-label">Home</span>
-         </a>
         <a href="#about" class="mobile-nav-item internal-link">
             <i class="fas fa-user mobile-nav-icon"></i>
             <span class="mobile-nav-label">About</span>
         </a>
-        <a href="#packages" class="mobile-nav-item internal-link">
-            <i class="fas fa-concierge-bell mobile-nav-icon"></i>
+        <a href="#packages" class="mobile-nav-item internal-link"> <i class="fas fa-concierge-bell mobile-nav-icon"></i>
             <span class="mobile-nav-label">Services</span>
         </a>
         <a href="#gallery" class="mobile-nav-item internal-link">
@@ -244,10 +282,12 @@
     </div>
 </nav>
 
-<button id="scroll-to-top" class="fixed bottom-6 right-6 bg-brand-primary text-white w-11 h-11 rounded-full shadow-lg hidden justify-center items-center hover:bg-brand-secondary transition-all duration-300 z-40 text-xl lg:bottom-6 lg:right-6">
+<button id="scroll-to-top" class="fixed bg-brand-primary text-white hover:bg-brand-secondary w-11 h-11 rounded-full shadow-lg hidden justify-center items-center transition-all duration-300 text-xl z-40 lg:bottom-6 lg:right-6" aria-label="Scroll back to top">
     <i class="fas fa-arrow-up"></i>
 </button>
 
 <script src="https://cdn.jsdelivr.net/npm/tsparticles-slim@2.12.0/tsparticles.slim.bundle.min.js"></script>
-<script src="js/main-new.js"></script> </body>
+<script src="js/main-new.js"></script>
+
+</body>
 </html>

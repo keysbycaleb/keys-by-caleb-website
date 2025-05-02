@@ -1,7 +1,5 @@
 /* --- START OF style-new.css --- */
-/* Styles for Keys by Caleb Home Page - V62.15 (Fix Mobile Scroll Button - Final Horizontal Nudge Left) */
-/* ... (previous version comments) ... */
-/* MODIFIED V62.15: Adjust 'left' calc slightly to nudge button left */
+/* Styles for Keys by Caleb Home Page - V63 (Mobile Carousels) */
 
 /* --- Base & Variables --- */
 :root {
@@ -33,7 +31,7 @@
 }
 
 /* --- Global & Scroll Behavior --- */
-html { scroll-behavior: auto; }
+html { scroll-behavior: auto; } /* Changed back to auto for JS control */
 body {
     margin: 0; padding: 0; background-color: var(--color-bg-light);
     color: var(--color-text-dark); line-height: 1.6; font-family: var(--font-secondary);
@@ -50,20 +48,23 @@ body {
     body.homepage-scroll-enabled { overflow: hidden; padding-top: var(--header-height-desktop); }
     .scroll-snap-container-home { height: 100vh; overflow-y: scroll; -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; }
     .scroll-snap-container-home::-webkit-scrollbar { display: none; }
-    .scroll-snap-container-home > main > section { min-height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: calc(var(--header-height-desktop) + 1rem) 1rem 2rem 1rem; box-sizing: border-box; position: relative; overflow: hidden; }
+    /* Sections within the container for desktop */
+    .scroll-snap-container-home > main > section { min-height: 100vh; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; box-sizing: border-box; position: relative; overflow: hidden; }
     .scroll-snap-container-home > main > section#hero { padding: 0; height: 100vh; }
-    .scroll-snap-container-home > main > section.section-allow-scroll { min-height: 100vh; height: auto; justify-content: center; padding-top: calc(var(--header-height-desktop) + 2rem); padding-bottom: 3rem; }
-    .scroll-snap-container-home > main > section.section-allow-scroll > .container { width: 100%; max-width: 1100px; margin-top: auto; margin-bottom: auto; }
-    .scroll-snap-container-home > footer#main-footer { min-height: auto; height: auto; padding-top: 4rem; padding-bottom: 6rem; /* Increased bottom padding */ position: relative; z-index: 10; }
+    /* Allow specific sections to scroll internally if needed, but base height is still 100vh */
+    .scroll-snap-container-home > main > section.section-allow-scroll { min-height: 100vh; height: auto; justify-content: flex-start; /* Align content top */ padding-top: calc(var(--header-height-desktop) + 2rem); padding-bottom: 3rem; overflow-y: auto; /* Allow internal scroll if content overflows */ }
+    .scroll-snap-container-home > main > section.section-allow-scroll > .container { width: 100%; max-width: 1100px; margin-top: 0; margin-bottom: 0; /* Remove auto margins */ }
+    .scroll-snap-container-home > footer#main-footer { min-height: auto; height: auto; padding-top: 4rem; padding-bottom: 6rem; position: relative; z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     #mobile-bottom-nav { display: none !important; /* Hide mobile nav on desktop */ }
-    /* ... other desktop specific tweaks ... */
+    /* Ensure desktop grids are displayed */
+    #packages .lg\:grid, #testimonials .lg\:grid { display: grid !important; }
+    #packages .lg\:hidden, #testimonials .lg\:hidden { display: none !important; }
 }
 
 /* --- Mobile/Tablet Styles (Screens < 1024px) --- */
 @media (max-width: 1023.98px) {
     body {
         padding-top: var(--header-height-mobile);
-        /* REVERTED: Use original padding */
         padding-bottom: var(--mobile-nav-height);
     }
     .scroll-snap-container-home { padding-bottom: 0; height: auto; overflow: visible; }
@@ -75,7 +76,78 @@ body {
     #hero h1 { font-size: 2.5rem; } #hero p { font-size: 1rem; }
     #about img { margin-left: auto; margin-right: auto; display: block; max-width: 80%; margin-bottom: 2rem; max-height: none; }
     .section-title { font-size: 1.8rem; } .section-subtitle { font-size: 0.95rem; margin-bottom: 1.5rem; }
-    .package-card, .testimonial-card { padding: 1.5rem; }
+
+    /* --- Mobile Carousel Styles --- */
+    .packages-carousel-container, .testimonials-carousel-container {
+        position: relative;
+        overflow: hidden; /* Hide direct overflow, track handles scroll */
+        margin-left: -0.75rem; /* Counteract track padding */
+        margin-right: -0.75rem; /* Counteract track padding */
+    }
+    .packages-carousel-track, .testimonials-carousel-track {
+        display: flex;
+        overflow-x: auto; /* Enable horizontal scrolling */
+        scroll-behavior: smooth; /* Smooth scrolling via JS */
+        -webkit-overflow-scrolling: touch; /* Momentum scrolling on iOS */
+        scroll-snap-type: x mandatory; /* Snap items */
+        padding-bottom: 1rem; /* Space for potential scrollbar (hidden) */
+        gap: 1rem; /* Space between cards */
+        /* Hide scrollbar */
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;  /* IE/Edge */
+    }
+    .packages-carousel-track::-webkit-scrollbar,
+    .testimonials-carousel-track::-webkit-scrollbar {
+        display: none; /* Chrome/Safari/Opera */
+    }
+    /* Card styling within the carousel */
+    .packages-carousel-track .package-card,
+    .testimonials-carousel-track .testimonial-card {
+        flex: 0 0 auto; /* Don't grow or shrink */
+        width: 85%; /* Adjust card width as needed */
+        scroll-snap-align: center; /* Center card when snapping */
+        margin-left: 0; /* Reset margins */
+        margin-right: 0;
+    }
+    @media (min-width: 640px) { /* sm breakpoint */
+        .packages-carousel-track .package-card,
+        .testimonials-carousel-track .testimonial-card {
+             width: 70%; /* Slightly smaller width on larger small screens */
+        }
+    }
+    /* Carousel Buttons */
+    .carousel-button {
+        display: flex; /* Use flex for centering icon */
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        background-color: rgba(255, 255, 255, 0.8);
+        color: var(--color-primary);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 9999px; /* Circle */
+        width: 2.5rem; /* 40px */
+        height: 2.5rem; /* 40px */
+        cursor: pointer;
+        transition: background-color 0.2s ease, opacity 0.3s ease;
+        opacity: 0.8;
+    }
+    .carousel-button:hover {
+        background-color: white;
+        opacity: 1;
+    }
+    .carousel-button.prev { left: 0.5rem; }
+    .carousel-button.next { right: 0.5rem; }
+    .carousel-button.hidden {
+        opacity: 0;
+        pointer-events: none; /* Disable clicks when hidden */
+    }
+    /* --- End Mobile Carousel Styles --- */
+
+
+    .package-card, .testimonial-card { padding: 1.5rem; } /* Base padding */
     .package-title { font-size: 1.2rem; } .package-price { font-size: 1.1rem; }
     .package-description { font-size: 0.9rem; margin-bottom: 1rem;}
     .testimonial-card p.italic { font-size: 0.9rem; margin-bottom: 0.75rem; }
@@ -86,31 +158,29 @@ body {
     #contact-form .form-label { font-size: 0.8rem; margin-bottom: 0.2rem;}
     #contact-form .form-input, #contact-form .form-select, #contact-form .form-textarea { font-size: 0.9rem; padding: 0.6rem 0.8rem; }
     #contact-form button.btn { padding: 0.7rem 1.2rem; font-size: 0.9rem; }
-    #main-header nav { min-height: var(--header-height-mobile); padding-left: 1rem; padding-right: 1rem; justify-content: center; /* Center mobile logo */ }
-    #desktop-nav-elements { display: none; /* Hide desktop nav container */ }
+    #main-header nav { min-height: var(--header-height-mobile); padding-left: 1rem; padding-right: 1rem; justify-content: center; }
+    #desktop-nav-elements { display: none; }
     footer .grid { gap: 2rem; text-align: center;}
     footer .md\:text-left { text-align: center; }
     footer .md\:justify-start { justify-content: center;}
     footer .footer-heading { font-size: 0.9rem; } footer .footer-nav-link { font-size: 0.9rem; }
 
-    /* Scroll-to-Top Button Position & Z-Index */
     #scroll-to-top {
-        bottom: 90px; /* Keep base offset above nav */
-        left: calc(100vw - 2.5rem - 0.65rem); /* MODIFIED: Nudge left slightly */
+        bottom: calc(var(--mobile-nav-height) + 1rem); /* Position above mobile nav */
+        right: 1rem;
         width: 2.5rem; height: 2.5rem; font-size: 1.1rem;
-        z-index: 9999; /* High z-index for mobile */
-        margin-bottom: 45px; /* Keep vertical nudge from V62.14 */
+        z-index: 999; /* Ensure it's above content but below mobile nav */
     }
 }
 
 /* --- Header --- */
 #main-header { background-color: var(--color-header-bg); padding: 0; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; box-shadow: var(--shadow-light); }
-#main-header nav { min-height: var(--header-height-desktop); }
+#main-header nav { min-height: var(--header-height-desktop); } /* Desktop height */
 
-/* --- Logo Styles (Base and Hover) --- */
+/* --- Logo Styles --- */
 a.header-logo { color: var(--color-primary); text-decoration: none; font-size: 1.875rem; font-family: var(--font-primary); font-weight: bold; transition: color 0.2s ease; padding: 0; display: inline-block; }
 a.header-logo::after { content: none !important; }
-a.header-logo:hover { color: var(--color-primary); }
+a.header-logo:hover { color: var(--color-primary); } /* Keep color on hover for logo */
 
 /* --- Navigation Links & Dropdowns (Desktop Styles Primarily) --- */
 #desktop-nav-elements .nav-link, #desktop-nav-elements .follow-button, #desktop-nav-elements a[title="Email Me"] { color: var(--color-primary); text-decoration: none; font-weight: 500; padding: 0.5rem 0.25rem; position: relative; transition: color 0.2s ease; cursor: pointer; background: none; border: none; font-family: inherit; font-size: 0.95rem; display: inline-flex; align-items: center; text-shadow: none; }
@@ -127,7 +197,7 @@ a.header-logo:hover { color: var(--color-primary); }
 #desktop-nav-elements .dropdown-link i { transition: transform 0.2s ease; color: #9ca3af; }
 #desktop-nav-elements .dropdown-link:hover i { color: var(--color-text-light); }
 
-/* --- Mobile Bottom Navigation (Scrollable - Left Aligned) --- */
+/* --- Mobile Bottom Navigation --- */
 #mobile-bottom-nav {
     position: fixed; bottom: 0; left: 0; width: 100%; height: var(--mobile-nav-height);
     background-color: var(--color-header-bg); box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
@@ -150,7 +220,7 @@ a.header-logo:hover { color: var(--color-primary); }
 .section-title { font-family: var(--font-primary); font-size: 2.5rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.5rem; line-height: 1.2; text-align: center; }
 .section-subtitle { font-family: var(--font-secondary); font-size: 1.125rem; color: var(--color-text-dark); opacity: 0.8; max-width: 650px; margin-left: auto; margin-right: auto; text-align: center; font-weight: 400; margin-bottom: 3rem; }
 
-/* --- Specific Section Backgrounds (Alternating) --- */
+/* --- Specific Section Backgrounds --- */
 #about, #gallery, #contact { background-color: var(--color-bg-light); }
 #packages, #testimonials { background-color: var(--color-bg-white); }
 #main-footer { background-color: var(--color-footer-bg); }
@@ -166,7 +236,8 @@ a.header-logo:hover { color: var(--color-primary); }
 /* --- tsParticles Container Styling --- */
 #tsparticles-hero > canvas { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
-/* --- Package Cards & Testimonial Cards --- */
+/* --- Package Cards & Testimonial Cards (Base Styles) --- */
+/* These apply to both desktop grid items and mobile carousel items */
 .package-card { background-color: var(--color-bg-card-opaque); padding: 2rem 1.75rem; border-radius: 16px; box-shadow: var(--shadow-medium); border: 1px solid rgba(166, 124, 82, 0.1); text-align: center; height: 100%; display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease; margin-left: auto; margin-right: auto; }
 @media (hover: hover) { .package-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-large); } }
 .package-icon { font-size: 2.5rem; color: var(--color-primary); margin-bottom: 1rem; }
@@ -184,7 +255,7 @@ a.header-logo:hover { color: var(--color-primary); }
 @media (hover: hover) { .gallery-item:hover .gallery-image { transform: scale(1.05); filter: brightness(1.1); } }
 .gallery-video { display: block; width: 100%; height: 100%; object-fit: cover; aspect-ratio: 3 / 2; background-color: #eee; }
 
-/* --- Contact Form Styling (Base) --- */
+/* --- Contact Form Styling --- */
 #contact form { background-color: var(--color-bg-white); box-shadow: var(--shadow-medium); }
 #contact-form .input-group { position: relative; text-align: left; margin-bottom: 0.75rem; }
 #contact-form .form-label { display: block; font-family: var(--font-secondary); font-size: 0.9rem; margin-bottom: 0.4rem; font-weight: 500; color: var(--color-text-dark); }
@@ -221,9 +292,11 @@ footer a.footer-nav-link[href^="booking-"]:hover { color: var(--color-secondary)
     opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s linear 0.3s, transform 0.3s ease;
     transform: translateY(10px) scale(0.9);
     position: fixed;
-    bottom: 1.5rem; /* Default for desktop */
+    /* Base positioning for desktop */
+    bottom: 1.5rem;
     right: 1.5rem;
-    /* Base z-index removed */
+    /* Base z-index for desktop */
+    z-index: 950;
 }
 #scroll-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0) scale(1); transition-delay: 0s;}
 #scroll-to-top:hover { transform: scale(1.05) translateY(-2px); }
