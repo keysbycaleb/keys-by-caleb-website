@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const moreDropdownTrigger = document.querySelector('.more-dropdown-trigger');
     const moreDropdownContainer = document.querySelector('.nav-item-dropdown.more-nav-item');
     const submenuExpandButtons = document.querySelectorAll('.submenu-expand-button');
-    
+
     // Particle Containers
     const heroParticleContainer = document.getElementById(PARTICLE_HERO_ID);
     const testimonialsParticleContainer = document.getElementById(PARTICLE_TESTIMONIALS_ID);
@@ -76,25 +76,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const heroParticlesConfig = { /* ... existing hero config ... */
-            particles: { number: { value: 50, density: { enable: true, value_area: 800 } }, color: { value: "#FFF8DC" }, shape: { type: "circle" }, opacity: { value: 0.4, random: true, anim: { enable: false } }, size: { value: { min: 1, max: 3 }, random: true, anim: { enable: false } }, links: { enable: false }, move: { enable: true, speed: 0.8, direction: "none", random: true, straight: true, out_mode: "out", bounce: false, attract: { enable: false } } }, interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }, }, detectRetina: true, fullScreen: { enable: false }, smooth: true
+        const heroParticlesConfig = {
+            particles: { number: { value: 50, density: { enable: true, value_area: 800 } }, color: { value: "#FFF8DC" }, shape: { type: "circle" }, opacity: { value: 0.9, random: true, anim: { enable: false } }, size: { value: { min: 1, max: 3 }, random: true, anim: { enable: false } }, links: { enable: false }, move: { enable: true, speed: 1.5, direction: "none", random: true, straight: true, out_mode: "out", bounce: false, attract: { enable: false } } }, interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }, }, detectRetina: true, fullScreen: { enable: false }, smooth: true
         };
-        const testimonialsParticlesConfig = { /* ... existing testimonials config ... */
-             particles: { number: { value: 40, density: { enable: true, value_area: 900 } }, color: { value: "#FFF8DC" }, shape: { type: "circle" }, opacity: { value: 0.2, random: true, anim: { enable: false } }, size: { value: { min: 1.5, max: 4 }, random: true, anim: { enable: false } }, links: { enable: false }, move: { enable: true, speed: 0.5, direction: "none", random: true, straight: true, out_mode: "out", bounce: false, attract: { enable: false } } }, interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }, }, detectRetina: true, fullScreen: { enable: false }, smooth: true
+        const testimonialsParticlesConfig = {
+             particles: { number: { value: 20, density: { enable: true, value_area: 900 } }, color: { value: "#FFF8DC" }, shape: { type: "circle" }, opacity: { value: 0.4, random: true, anim: { enable: false } }, size: { value: { min: 1.5, max: 4 }, random: true, anim: { enable: false } }, links: { enable: false }, move: { enable: true, speed: 1.5, direction: "none", random: true, straight: true, out_mode: "out", bounce: false, attract: { enable: false } } }, interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }, }, detectRetina: true, fullScreen: { enable: false }, smooth: true
         };
 
-        // New Config for Header & Footer (Subtle)
+        // New Config for Header & Footer (Subtle) - Now with updated speed
         const headerFooterParticlesConfig = {
             particles: {
                 number: { value: 20 }, // Fewer particles for smaller areas
                 color: { value: "#FFF8DC" }, // Soft Ivory, same as hero for consistency on dark bg
                 shape: { type: "circle" },
-                opacity: { value: 0.25, random: true, anim: { enable: false, speed: 0.1, opacity_min: 0.1, sync: false } },
+                opacity: { value: 0.25, random: true, anim: { enable: false, speed: 0.1, opacity_min: 0.9, sync: false } },
                 size: { value: {min: 0.5, max: 1.5}, random: true, anim: { enable: false } },
                 links: { enable: false },
                 move: {
                     enable: true,
-                    speed: 0.4, // Very slow
+                    speed: 1.5, // Updated speed
                     direction: "none",
                     random: true,
                     straight: true,
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Load for Footer
         if (footerParticleContainer) {
-            tsParticles.load({ id: PARTICLE_FOOTER_ID, options: headerFooterParticlesConfig }) // Re-use same subtle config
+            tsParticles.load({ id: PARTICLE_FOOTER_ID, options: headerFooterParticlesConfig }) // Re-use same config
                 .then(container => { console.log(`tsParticles loaded for #${PARTICLE_FOOTER_ID}`); })
                 .catch(error => { console.error(`Error loading tsParticles for #${PARTICLE_FOOTER_ID}:`, error); });
         } else {
@@ -274,11 +274,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 let elementPosition;
                 let offsetPosition;
 
-                if (scrollTarget === window) { 
+                if (scrollTarget === window) {
                     elementPosition = targetElement.getBoundingClientRect().top;
                     offsetPosition = elementPosition + window.pageYOffset - headerOffset;
                     window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-                } else { 
+                } else {
                      elementPosition = targetElement.offsetTop;
                      offsetPosition = elementPosition - headerOffset;
                      scrollTarget.scrollTo({ top: offsetPosition, behavior: 'smooth' });
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initializations ---
     isMobile = window.innerWidth < MOBILE_BREAKPOINT;
-    initParticles(); 
+    initParticles();
     setupScrollListeners();
     handleScroll();
     if(scrollToTopButton) {
