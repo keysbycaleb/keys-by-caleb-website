@@ -1,7 +1,7 @@
 /**
- * JavaScript for Keys by Caleb Pinterest-Style Layout (V1.31 - Updated Hero Text)
+ * JavaScript for Keys by Caleb Pinterest-Style Layout (V1.33 - Added Header/Footer Particles)
  * Handles:
- * - tsParticles initialization for Hero and Testimonials sections.
+ * - tsParticles initialization for Hero, Testimonials, Header, and Footer sections.
  * - Intersection Observer entrance animations.
  * - Enhanced keyboard scroll navigation (Arrow Keys) for desktop.
  * - Dynamic hero text (Keyframe animation).
@@ -16,7 +16,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("Keys by Caleb - Adapted Pinterest Style JS Initialized (V1.31 - Updated Hero Text)");
+    console.log("Keys by Caleb - Adapted Pinterest Style JS Initialized (V1.33 - Header/Footer Particles)");
 
     // --- Configuration ---
     const HERO_TEXT_INTERVAL = 3500;
@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const TEXT_CHANGE_DELAY = 300;
     const PARTICLE_HERO_ID = 'tsparticles-hero';
     const PARTICLE_TESTIMONIALS_ID = 'tsparticles-testimonials';
+    const PARTICLE_HEADER_ID = 'tsparticles-header'; // New
+    const PARTICLE_FOOTER_ID = 'tsparticles-footer'; // New
     const SCROLL_DEBOUNCE_MS = 50;
     const MOBILE_BREAKPOINT = 1024;
     const KEYBOARD_SCROLL_TIMEOUT_DURATION = 700;
@@ -48,15 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const moreDropdownTrigger = document.querySelector('.more-dropdown-trigger');
     const moreDropdownContainer = document.querySelector('.nav-item-dropdown.more-nav-item');
     const submenuExpandButtons = document.querySelectorAll('.submenu-expand-button');
+    
+    // Particle Containers
     const heroParticleContainer = document.getElementById(PARTICLE_HERO_ID);
     const testimonialsParticleContainer = document.getElementById(PARTICLE_TESTIMONIALS_ID);
+    const headerParticleContainer = document.getElementById(PARTICLE_HEADER_ID); // New
+    const footerParticleContainer = document.getElementById(PARTICLE_FOOTER_ID); // New
 
 
     // --- State ---
     let isMobile = window.innerWidth < MOBILE_BREAKPOINT;
     let isKeyboardScrolling = false;
     let currentIdeaIndex = 0;
-    // *** UPDATED: New list of hero text phrases ***
     const ideas = [ 'Elegant Wedding Music', 'Sophisticated Soundtracks', 'Live Piano Ambiance', 'Creating Lasting Memories', 'Riverside\'s Premier Pianist', 'Expert Keyboard Artistry' ];
 
     // --- Helper Functions ---
@@ -66,24 +71,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- tsParticles Initialization ---
     const initParticles = () => {
-        // Check if tsParticles library is loaded
         if (typeof tsParticles === 'undefined') {
             console.error("tsParticles library not loaded.");
             return;
         }
 
-        // Configuration for Hero Section (Light particles)
-        const heroParticlesConfig = {
+        const heroParticlesConfig = { /* ... existing hero config ... */
+            particles: { number: { value: 50, density: { enable: true, value_area: 800 } }, color: { value: "#FFF8DC" }, shape: { type: "circle" }, opacity: { value: 0.4, random: true, anim: { enable: false } }, size: { value: { min: 1, max: 3 }, random: true, anim: { enable: false } }, links: { enable: false }, move: { enable: true, speed: 0.8, direction: "none", random: true, straight: true, out_mode: "out", bounce: false, attract: { enable: false } } }, interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }, }, detectRetina: true, fullScreen: { enable: false }, smooth: true
+        };
+        const testimonialsParticlesConfig = { /* ... existing testimonials config ... */
+             particles: { number: { value: 40, density: { enable: true, value_area: 900 } }, color: { value: "#FFF8DC" }, shape: { type: "circle" }, opacity: { value: 0.2, random: true, anim: { enable: false } }, size: { value: { min: 1.5, max: 4 }, random: true, anim: { enable: false } }, links: { enable: false }, move: { enable: true, speed: 0.5, direction: "none", random: true, straight: true, out_mode: "out", bounce: false, attract: { enable: false } } }, interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false }, resize: true }, }, detectRetina: true, fullScreen: { enable: false }, smooth: true
+        };
+
+        // New Config for Header & Footer (Subtle)
+        const headerFooterParticlesConfig = {
             particles: {
-                number: { value: 50, density: { enable: true, value_area: 800 } },
-                color: { value: "#FFF8DC" }, // Soft Ivory
+                number: { value: 20 }, // Fewer particles for smaller areas
+                color: { value: "#FFF8DC" }, // Soft Ivory, same as hero for consistency on dark bg
                 shape: { type: "circle" },
-                opacity: { value: 0.4, random: true, anim: { enable: false } },
-                size: { value: { min: 1, max: 3 }, random: true, anim: { enable: false } },
+                opacity: { value: 0.25, random: true, anim: { enable: false, speed: 0.1, opacity_min: 0.1, sync: false } },
+                size: { value: {min: 0.5, max: 1.5}, random: true, anim: { enable: false } },
                 links: { enable: false },
                 move: {
                     enable: true,
-                    speed: 0.8,
+                    speed: 0.4, // Very slow
                     direction: "none",
                     random: true,
                     straight: true,
@@ -93,62 +104,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             interactivity: {
-                detect_on: "canvas",
+                detect_on: "canvas", // or "window" if preferred
                 events: { onhover: { enable: false }, onclick: { enable: false }, resize: true },
             },
             detectRetina: true,
-            fullScreen: { enable: false }, // IMPORTANT: Target specific containers
-            smooth: true // Use requestAnimationFrame
-        };
-
-        // Configuration for Testimonials Section (Gold particles)
-        const testimonialsParticlesConfig = {
-            particles: {
-                number: { value: 40, density: { enable: true, value_area: 900 } }, // Slightly fewer
-                color: { value: "#FFF8DC" }, // Lighter Gold/Bronze
-                shape: { type: "circle" },
-                opacity: { value: 0.2, random: true, anim: { enable: false } },
-                size: { value: { min: 1.5, max: 4 }, random: true, anim: { enable: false } },
-                links: { enable: false },
-                move: {
-                    enable: true,
-                    speed: 0.5, // Slower speed
-                    direction: "none", // Subtle drift
-                    random: true,
-                    straight: true,
-                    out_mode: "out",
-                    bounce: false,
-                    attract: { enable: false }
-                }
-            },
-            interactivity: {
-                detect_on: "canvas",
-                events: { onhover: { enable: false }, onclick: { enable: false }, resize: true },
-            },
-            detectRetina: true,
-            fullScreen: { enable: false }, // IMPORTANT
+            fullScreen: { enable: false }, // CRITICAL: Must be false for container-bound particles
             smooth: true
         };
 
 
-        // Load particles if containers exist
         if (heroParticleContainer) {
             tsParticles.load({ id: PARTICLE_HERO_ID, options: heroParticlesConfig })
                 .then(container => { console.log(`tsParticles loaded for #${PARTICLE_HERO_ID}`); })
                 .catch(error => { console.error(`Error loading tsParticles for #${PARTICLE_HERO_ID}:`, error); });
-        } else {
-            console.log(`#${PARTICLE_HERO_ID} container not found, skipping particles.`);
         }
-
         if (testimonialsParticleContainer) {
             tsParticles.load({ id: PARTICLE_TESTIMONIALS_ID, options: testimonialsParticlesConfig })
                  .then(container => { console.log(`tsParticles loaded for #${PARTICLE_TESTIMONIALS_ID}`); })
                  .catch(error => { console.error(`Error loading tsParticles for #${PARTICLE_TESTIMONIALS_ID}:`, error); });
+        }
+        // Load for Header
+        if (headerParticleContainer) {
+            tsParticles.load({ id: PARTICLE_HEADER_ID, options: headerFooterParticlesConfig })
+                .then(container => { console.log(`tsParticles loaded for #${PARTICLE_HEADER_ID}`); })
+                .catch(error => { console.error(`Error loading tsParticles for #${PARTICLE_HEADER_ID}:`, error); });
         } else {
-            console.log(`#${PARTICLE_TESTIMONIALS_ID} container not found, skipping particles.`);
+            console.log(`#${PARTICLE_HEADER_ID} container not found, skipping particles.`);
+        }
+        // Load for Footer
+        if (footerParticleContainer) {
+            tsParticles.load({ id: PARTICLE_FOOTER_ID, options: headerFooterParticlesConfig }) // Re-use same subtle config
+                .then(container => { console.log(`tsParticles loaded for #${PARTICLE_FOOTER_ID}`); })
+                .catch(error => { console.error(`Error loading tsParticles for #${PARTICLE_FOOTER_ID}:`, error); });
+        } else {
+            console.log(`#${PARTICLE_FOOTER_ID} container not found, skipping particles.`);
         }
      };
-
 
     // --- Dynamic Hero Text ---
     function onAnimationEnd() { if (dynamicTextElement) dynamicTextElement.classList.remove('is-animating'); }
@@ -207,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
      }
 
-     // --- Close L1 & L3 Dropdowns Helper ---
      const closeAllSubmenus = (container = document) => {
          container.querySelectorAll('.l3-submenu.is-open').forEach(submenu => {
              submenu.classList.remove('is-open');
@@ -226,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
          }
      };
 
-     // --- L1 "More" Dropdown Click Toggle ---
      if (moreDropdownTrigger && moreDropdownContainer) {
          moreDropdownTrigger.addEventListener('click', (e) => {
              e.stopPropagation();
@@ -241,30 +230,19 @@ document.addEventListener('DOMContentLoaded', () => {
          document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && moreDropdownContainer?.classList.contains('dropdown-open')) { closeL1Dropdown(); moreDropdownTrigger?.focus(); } });
      }
 
-     // --- L2 Chevron Click Toggle for L3 (Updated for Animation) ---
      submenuExpandButtons.forEach(button => {
          button.addEventListener('click', (e) => {
              e.preventDefault();
              e.stopPropagation();
-
              const parentItem = button.closest('.main-dropdown-item');
              if (!parentItem) return;
-
              const targetId = parentItem.getAttribute('aria-controls');
              const targetSubmenu = document.getElementById(targetId);
-
              if (!targetSubmenu) { console.error("Could not find target L3 submenu for", parentItem); return; }
-
              const isOpening = !parentItem.classList.contains('is-open');
-
-             // Toggle state on parent L2 item
              parentItem.classList.toggle('is-open');
              parentItem.setAttribute('aria-expanded', isOpening);
-
-             // Toggle state directly on L3 submenu
              targetSubmenu.classList.toggle('is-open');
-
-             // Optional: Accordion - Close other L3s
              if (isOpening) {
                  const parentMenu = parentItem.closest('.nav-dropdown');
                  parentMenu.querySelectorAll('.main-dropdown-item.is-open').forEach(otherItem => {
@@ -279,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
              }
          });
      });
-
 
     // --- Smooth Scroll for Internal Links (Updated with Footer Flash) ---
     const smoothScrollHandler = function (e) {
@@ -297,17 +274,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 let elementPosition;
                 let offsetPosition;
 
-                if (scrollTarget === window) { // Mobile Scroll
+                if (scrollTarget === window) { 
                     elementPosition = targetElement.getBoundingClientRect().top;
                     offsetPosition = elementPosition + window.pageYOffset - headerOffset;
                     window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-                } else { // Desktop Scroll
+                } else { 
                      elementPosition = targetElement.offsetTop;
                      offsetPosition = elementPosition - headerOffset;
                      scrollTarget.scrollTo({ top: offsetPosition, behavior: 'smooth' });
                 }
 
-                // --- Footer Icon Flash Logic ---
                 if (targetId === 'main-footer') {
                     setTimeout(() => {
                         const footerIcons = document.querySelectorAll('#main-footer .footer-social-icon');
@@ -317,14 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }, FOOTER_SCROLL_DURATION_ESTIMATE);
                 }
-                // --- END: Footer Icon Flash Logic ---
-
-                // Close L1 dropdown after clicking an internal link within it
                 if (link.closest('.more-dropdown-menu')) {
                      setTimeout(closeL1Dropdown, 50);
                 }
-
-                // Close mobile nav if open
                 if (isMobile && desktopNavElements?.classList.contains('active')) {
                     setTimeout(() => {
                         desktopNavElements.classList.remove('active');
@@ -333,18 +304,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         mobileMenuToggle?.setAttribute('aria-expanded', 'false');
                     }, 100);
                 }
-
             } else {
                  console.warn(`Smooth scroll target element not found: #${targetId}`);
             }
         }
-        // Handle external links clicked *within* the dropdown (close dropdown)
         else if (link.closest('.more-dropdown-menu')) {
              setTimeout(closeL1Dropdown, 50);
         }
     };
 
-    // Attach smooth scroll / close handlers
     document.querySelectorAll('a.internal-link, .dropdown-item-link.internal-link').forEach(anchor => {
         anchor.removeEventListener('click', smoothScrollHandler);
         anchor.addEventListener('click', smoothScrollHandler);
@@ -354,10 +322,9 @@ document.addEventListener('DOMContentLoaded', () => {
          anchor.addEventListener('click', smoothScrollHandler);
     });
 
-
     // --- Initializations ---
     isMobile = window.innerWidth < MOBILE_BREAKPOINT;
-    initParticles(); // Now actually initializes particles
+    initParticles(); 
     setupScrollListeners();
     handleScroll();
     if(scrollToTopButton) {
